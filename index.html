@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bolt Action v3 – Regelreferenz</title>
+<style>
+  :root{
+    --bg:#f4f1ea;
+    --bg-alt:#e9e4d6;
+    --panel:#ffffff;
+    --ink:#26261f;
+    --ink-soft:#5b5947;
+    --olive:#4b5320;
+    --olive-dark:#33380f;
+    --olive-light:#6b7a2e;
+    --tan:#c9b98a;
+    --rule:#d8d0ba;
+    --accent:#8a1f11;
+    --link:#4b5320;
+    --code-bg:#efe9d6;
+    --shadow:0 1px 3px rgba(0,0,0,.08);
+  }
+  [data-theme="dark"]{
+    --bg:#1b1c16;
+    --bg-alt:#23241c;
+    --panel:#242519;
+    --ink:#e9e5d6;
+    --ink-soft:#b3ae97;
+    --olive:#9fae5b;
+    --olive-dark:#c7d488;
+    --olive-light:#7c8a45;
+    --tan:#8a7a4f;
+    --rule:#3a3b2c;
+    --accent:#e07a5f;
+    --link:#b7c377;
+    --code-bg:#2d2e21;
+    --shadow:0 1px 3px rgba(0,0,0,.4);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#1b1c16;
+      --bg-alt:#23241c;
+      --panel:#242519;
+      --ink:#e9e5d6;
+      --ink-soft:#b3ae97;
+      --olive:#9fae5b;
+      --olive-dark:#c7d488;
+      --olive-light:#7c8a45;
+      --tan:#8a7a4f;
+      --rule:#3a3b2c;
+      --accent:#e07a5f;
+      --link:#b7c377;
+      --code-bg:#2d2e21;
+      --shadow:0 1px 3px rgba(0,0,0,.4);
+    }
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.5;
+    margin:0;
+  }
+  a{color:var(--link);}
+  h1,h2,h3,h4{font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;letter-spacing:.02em;}
+
+  /* ---------- Top bar ---------- */
+  header.topbar{
+    position:sticky; top:0; z-index:50;
+    background:var(--olive-dark);
+    color:#f4f1ea;
+    padding:.7rem 1rem;
+    display:flex; align-items:center; gap:.8rem;
+    box-shadow:var(--shadow);
+  }
+  header.topbar .brand{
+    font-weight:700; font-size:1.05rem; white-space:nowrap;
+    display:flex; align-items:center; gap:.5rem;
+  }
+  header.topbar .brand .badge{
+    background:var(--accent); color:#fff; font-size:.65rem; font-weight:700;
+    padding:.15rem .4rem; border-radius:3px; letter-spacing:.05em;
+  }
+  #search{
+    flex:1; min-width:0;
+    padding:.45rem .7rem;
+    border-radius:5px;
+    border:1px solid transparent;
+    background:rgba(255,255,255,.12);
+    color:#fff;
+    font-size:.95rem;
+  }
+  #search::placeholder{color:#e2ddc9;}
+  #search:focus{outline:2px solid var(--tan); background:rgba(255,255,255,.2);}
+  .icon-btn{
+    background:transparent; border:1px solid rgba(255,255,255,.3); color:#fff;
+    border-radius:5px; padding:.4rem .55rem; cursor:pointer; font-size:1rem; line-height:1;
+  }
+  .icon-btn:hover{background:rgba(255,255,255,.15);}
+
+  /* ---------- Layout ---------- */
+  .layout{
+    display:grid;
+    grid-template-columns:260px 1fr;
+    max-width:1180px;
+    margin:0 auto;
+  }
+  @media (max-width:860px){
+    .layout{grid-template-columns:1fr;}
+    nav.toc{position:static; max-height:none; display:none;}
+    nav.toc.open{display:block;}
+  }
+
+  nav.toc{
+    position:sticky; top:56px;
+    align-self:start;
+    max-height:calc(100vh - 56px);
+    overflow-y:auto;
+    padding:1rem .8rem 2rem;
+    border-right:1px solid var(--rule);
+    background:var(--bg-alt);
+  }
+  nav.toc h2{
+    font-size:.72rem; text-transform:uppercase; letter-spacing:.08em;
+    color:var(--ink-soft); margin:1rem 0 .35rem; padding-top:.6rem;
+    border-top:1px solid var(--rule);
+  }
+  nav.toc h2:first-child{margin-top:0; border-top:none; padding-top:0;}
+  nav.toc ul{list-style:none; margin:0; padding:0;}
+  nav.toc li a{
+    display:block; padding:.3rem .5rem; border-radius:4px;
+    color:var(--ink); text-decoration:none; font-size:.9rem;
+  }
+  nav.toc li a.sub{padding-left:1.1rem; font-size:.85rem; color:var(--ink-soft);}
+  nav.toc li a:hover{background:var(--panel);}
+  nav.toc li a.active{background:var(--olive); color:#fff;}
+
+  main{padding:1.2rem 1.4rem 4rem; min-width:0;}
+
+  .hero{
+    background:var(--panel); border:1px solid var(--rule); border-radius:10px;
+    padding:1.1rem 1.3rem; margin-bottom:1.6rem; box-shadow:var(--shadow);
+  }
+  .hero h1{margin:.1rem 0 .3rem; font-size:1.5rem; color:var(--olive-dark);}
+  [data-theme="dark"] .hero h1{color:var(--olive-light);}
+  @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .hero h1{color:var(--olive-light);}}
+  .hero p{margin:.25rem 0; color:var(--ink-soft); font-size:.92rem;}
+  .disclaimer{
+    margin-top:.7rem; padding:.6rem .8rem; border-radius:6px;
+    background:var(--code-bg); border-left:3px solid var(--accent);
+    font-size:.82rem; color:var(--ink-soft);
+  }
+
+  section.category{margin-bottom:2.6rem;}
+  section.category > h2{
+    font-size:1.4rem; color:#fff; background:var(--olive);
+    display:inline-block; padding:.35rem .9rem; border-radius:6px 6px 0 0;
+    margin:0; position:relative; top:1px;
+  }
+  .cat-body{
+    background:var(--panel); border:1px solid var(--rule); border-radius:0 8px 8px 8px;
+    padding:1.3rem 1.4rem; box-shadow:var(--shadow);
+  }
+
+  article.rule{
+    margin-bottom:1.8rem; scroll-margin-top:70px;
+  }
+  article.rule:last-child{margin-bottom:0;}
+  article.rule h3{
+    font-size:1.08rem; color:var(--olive-dark); margin:0 0 .5rem;
+    border-bottom:2px solid var(--tan); padding-bottom:.25rem;
+  }
+  [data-theme="dark"] article.rule h3{color:var(--olive-light);}
+  @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) article.rule h3{color:var(--olive-light);}}
+
+  article.rule p{margin:.5rem 0;}
+  article.rule ul, article.rule ol{margin:.4rem 0 .7rem; padding-left:1.35rem;}
+  article.rule li{margin:.28rem 0;}
+  .pageref{
+    font-size:.72rem; color:var(--ink-soft); background:var(--code-bg);
+    border-radius:4px; padding:.1rem .4rem; margin-left:.4rem; white-space:nowrap;
+  }
+
+  .callout{
+    background:var(--code-bg); border-left:3px solid var(--olive);
+    padding:.6rem .8rem; border-radius:6px; margin:.6rem 0; font-size:.9rem;
+  }
+  .callout.warn{border-left-color:var(--accent);}
+  .callout strong{color:var(--olive-dark);}
+  [data-theme="dark"] .callout strong{color:var(--olive-light);}
+  @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .callout strong{color:var(--olive-light);}}
+
+  .xref{
+    display:inline-block; margin:.15rem .3rem .15rem 0; font-size:.85rem;
+    background:var(--bg-alt); border:1px solid var(--rule); border-radius:20px;
+    padding:.15rem .7rem; text-decoration:none;
+  }
+  .xref:before{content:"↳ ";}
+
+  table.ref{
+    width:100%; border-collapse:collapse; margin:.6rem 0 1rem; font-size:.88rem;
+  }
+  table.ref caption{
+    text-align:left; font-size:.78rem; color:var(--ink-soft); margin-bottom:.3rem;
+  }
+  table.ref th, table.ref td{
+    border:1px solid var(--rule); padding:.4rem .55rem; text-align:left;
+  }
+  table.ref th{background:var(--bg-alt); font-weight:700;}
+  table.ref td.num, table.ref th.num{text-align:center; white-space:nowrap;}
+
+  footer{
+    text-align:center; padding:1.6rem 1rem 3rem; color:var(--ink-soft); font-size:.8rem;
+  }
+  footer a{color:var(--ink-soft);}
+
+  mark{background:#ffe08a; color:#26261f; padding:0 .1em; border-radius:2px;}
+  [data-theme="dark"] mark{background:#7a5c00; color:#fff;}
+
+  .hidden-by-search{display:none !important;}
+  .no-results{padding:2rem; text-align:center; color:var(--ink-soft);}
+
+  .mobile-toc-toggle{display:none;}
+  @media (max-width:860px){
+    .mobile-toc-toggle{display:inline-flex;}
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <button class="icon-btn mobile-toc-toggle" id="tocToggle" aria-label="Inhalt umschalten" title="Inhaltsverzeichnis">☰</button>
+  <span class="brand">⚔️ Bolt&nbsp;Action <span class="badge">v3</span></span>
+  <input id="search" type="search" placeholder="Regel suchen … (z. B. „Panzerfaust“, „Stockwerk“)" aria-label="Regeln durchsuchen">
+  <button class="icon-btn" id="themeToggle" title="Hell/Dunkel umschalten" aria-label="Hell/Dunkel umschalten">🌓</button>
+</header>
+
+<div class="layout">
+  <nav class="toc" id="toc">
+    <h2>Transporter</h2>
+    <ul>
+      <li><a href="#transporter" class="sub" data-sec>Übersicht</a></li>
+      <li><a href="#transporter-einsteigen" class="sub" data-sec>Einsteigen</a></li>
+      <li><a href="#transporter-aussteigen-zerstoerung" class="sub" data-sec>Aussteigen bei Zerstörung</a></li>
+      <li><a href="#transporter-nahkampf" class="sub" data-sec>Nahkampf gegen Transporter</a></li>
+    </ul>
+    <h2>Häuser</h2>
+    <ul>
+      <li><a href="#haeuser" class="sub" data-sec>Übersicht</a></li>
+      <li><a href="#haeuser-assault-raus" class="sub" data-sec>Assault aus dem Haus</a></li>
+      <li><a href="#haeuser-assault-rein" class="sub" data-sec>Assault ins Haus</a></li>
+      <li><a href="#haeuser-panzer-assault" class="sub" data-sec>Panzer gegen Haus (Assault)</a></li>
+      <li><a href="#haeuser-stockwerk" class="sub" data-sec>Stockwerk wechseln</a></li>
+      <li><a href="#haeuser-flammenwerfer" class="sub" data-sec>Flammenwerfer gegen Haus</a></li>
+    </ul>
+    <h2>Nahkampf</h2>
+    <ul>
+      <li><a href="#nahkampf" class="sub" data-sec>Übersicht</a></li>
+      <li><a href="#nahkampf-ablauf" class="sub" data-sec>Ablauf (Standard)</a></li>
+      <li><a href="#nahkampf-transporter" class="sub" data-sec>… gegen Transporter</a></li>
+      <li><a href="#nahkampf-haeuser" class="sub" data-sec>… gegen Häuser</a></li>
+      <li><a href="#nahkampf-panzerjaeger" class="sub" data-sec>Panzerjäger/-granaten gg. Panzer</a></li>
+    </ul>
+  </nav>
+
+  <main id="main">
+    <div class="hero">
+      <h1>Bolt Action v3 – persönliche Regelreferenz</h1>
+      <p>Kompakte Zusammenfassung der Regeln, bei denen am Tisch am häufigsten nachgeschlagen wird: Transporter, Häuser, Nahkampf. Zum schnellen Nachschauen per Linkliste – nicht zum Erlernen des kompletten Spiels gedacht.</p>
+      <div class="disclaimer">
+        <strong>Hinweis:</strong> Dies ist eine <strong>eigene, frei formulierte Zusammenfassung</strong> der Spielmechanik von <em>Bolt Action</em> (3. Edition, Warlord Games). Es werden keine Original-Texte oder Bilder aus dem Regelbuch wiedergegeben – nur eigene Notizen mit Seitenangaben zum Abgleich mit dem eigenen, offiziell erworbenen Regelbuch. Bolt Action ist ein Warenzeichen von Warlord Games Ltd.
+      </div>
+    </div>
+
+    <!-- ================= TRANSPORTER ================= -->
+    <section class="category" id="transporter">
+      <h2>🚚 Transporter</h2>
+      <div class="cat-body">
+
+        <article class="rule" id="transporter-einsteigen">
+          <h3>Einsteigen <span class="pageref">S. 146</span></h3>
+          <ul>
+            <li>Nur in ein <strong>stehendes</strong> Fahrzeug möglich. Ein Fahrzeug, das diese Runde bereits <em>Advance</em> oder <em>Run</em> befohlen bekam, kann nicht mehr bestiegen werden – und ein bestiegenes Fahrzeug darf danach selbst nicht mehr Advance/Run erhalten.</li>
+            <li>Die einsteigende Einheit braucht einen <em>Advance</em>- oder <em>Run</em>-Befehl und muss komplett bis auf 1" ans Fahrzeug heran.</li>
+            <li>Schaffen es <strong>alle</strong> Modelle: Einheit wird sofort vom Tisch genommen, Aktivierung endet (bei Advance darf danach nicht mehr geschossen werden).</li>
+            <li>Schaffen es <strong>nicht alle</strong>: niemand steigt ein. Modelle, die per Advance liefen, dürfen trotzdem normal schießen.</li>
+            <li>Kapazität ist im Fahrzeugeintrag festgelegt; eine Einheit darf nicht auf mehrere Fahrzeuge aufgeteilt werden. Mehrere kleine Einheiten dürfen sich ein Fahrzeug teilen, solange die Gesamtzahl passt.</li>
+            <li>Fahrzeug und Passagiere sind <strong>zwei getrennte Einheiten</strong> mit zwei getrennten Befehlen.</li>
+            <li>Einsteigen per Regroup-Move (nach gewonnenem Nahkampf) ist <strong>nicht</strong> möglich.</li>
+          </ul>
+          <div class="callout"><strong>Aussteigen (regulär):</strong> geht aus stehendem Fahrzeug oder einem, das diese Runde Advance gemacht hat (nicht aus einem Run-Fahrzeug, außer erzwungen s.u.). Die aussteigende Einheit selbst braucht Advance- oder Run-Befehl, Bewegung wird ab dem Fahrzeug gemessen. Aussteigen per Run ist erlaubt, aber die Einheit darf im selben Zug damit weder assaulten noch in ein anderes Fahrzeug einsteigen.</div>
+        </article>
+
+        <article class="rule" id="transporter-aussteigen-zerstoerung">
+          <h3>Aussteigen bei Zerstörung / Beschädigung <span class="pageref">S. 147</span></h3>
+          <ul>
+            <li><strong>Immobilised</strong> oder <strong>On Fire</strong>-Ergebnis: Passagiere müssen sofort nach der Schadensabwicklung aussteigen.</li>
+            <li><strong>Fahrzeug zerstört (Knocked Out):</strong> jede an Bord befindliche Einheit erleidet sofort <strong>D6 „Handfeuerwaffen“-Treffer</strong> (keine Deckungswürfe), Verluste werden normal entfernt – <em>keine</em> zusätzlichen Pins dadurch. Überlebende müssen danach sofort aussteigen.</li>
+            <li><strong>Fahrzeug wird gerouted</strong> (genug Pins): Passagiere müssen sofort aussteigen, erleiden aber <em>keinen</em> Schaden.</li>
+            <li>In allen Fällen: Modelle werden innerhalb <strong>D6"</strong> vom Fahrzeug platziert (wie ein Regroup-Move nach Nahkampf) und die Einheit ist/bleibt <em>Down</em>.</li>
+          </ul>
+          <div class="callout warn"><strong>Leere Transporter in Feindnähe:</strong> Ein leeres, ungepanzertes Transportfahrzeug, das am Rundenende näher an einer Feind- als an einer eigenen Einheit steht (leere Transporter zählen dabei nicht mit), wird <strong>automatisch zerstört</strong>. Ein leerer <em>gepanzerter</em> Transporter macht in diesem Fall stattdessen nur einen Moraltest – besteht er, bleibt er im Spiel.</div>
+        </article>
+
+        <article class="rule" id="transporter-nahkampf">
+          <h3>Nahkampf gegen einen beladenen Transporter <span class="pageref">S. 148</span></h3>
+          <p>Details zum allgemeinen Ablauf: <a class="xref" href="#nahkampf-transporter">Nahkampf → gegen Transporter</a></p>
+          <ul>
+            <li>Der angegriffene Transporter darf zuerst mit Abwehrfeuer reagieren, sofern der Angreifer im Waffenbogen liegt und den Angriff aus mehr als 6" startet.</li>
+            <li>Stoppt das den Angriff nicht: Alle Passagiere müssen <strong>sofort zwangsweise aussteigen</strong> – unabhängig von bereits erteilten Befehlen – und werden so nah wie möglich am Fahrzeug auf der angegriffenen Seite aufgestellt.</li>
+            <li>Sind mehrere Einheiten an Bord, steigen <strong>alle</strong> aus, aber es kämpft nur die <strong>größte</strong> Einheit im resultierenden Nahkampf (bei Gleichstand entscheidet der Angreifer).</li>
+            <li>Der Angreifer gilt automatisch als in Kontakt (Modelle einfach zum nächsten ausgestiegenen Modell schieben) – es gibt in diesem Fall <strong>keinen Defensive-Position-Bonus</strong> für die Verteidiger.</li>
+            <li>Wird die kämpfende Einheit vernichtet, kann der jetzt leere Transporter am Rundenende selbst der „Leere Transporter in Feindnähe“-Regel zum Opfer fallen.</li>
+          </ul>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- ================= HÄUSER ================= -->
+    <section class="category" id="haeuser">
+      <h2>🏚️ Häuser</h2>
+      <div class="cat-body">
+
+        <article class="rule" id="haeuser-basics">
+          <h3>Grundlagen: Betreten &amp; Verlassen <span class="pageref">S. 153–154</span></h3>
+          <ul>
+            <li>Nur <strong>Infanterie</strong> darf Gebäude betreten. Advance- oder Run-Befehl nötig, alle Modelle müssen bis auf 1" ran <strong>und</strong> mindestens ein Modell muss eine Öffnung (Tür/Fenster) erreichen.</li>
+            <li>Bei Erfolg: Einheit sofort vom Tisch, Aktivierung endet (bei Advance kein Schießen mehr).</li>
+            <li>Betreten geschieht immer im <strong>Erdgeschoss</strong>. Von Feinden belegte Stockwerke können nicht betreten, nur assaultet werden (siehe unten).</li>
+            <li>Betreten per Regroup-Move ist normalerweise nicht möglich – <strong>außer</strong> man hat das Haus gerade per Assault erobert (siehe „Assault ins Haus“).</li>
+            <li>Verlassen: nur vom Erdgeschoss, Advance- oder Run-Befehl, Bewegung ab einer Öffnung gemessen.</li>
+          </ul>
+        </article>
+
+        <article class="rule" id="haeuser-assault-raus">
+          <h3>Assault aus einem Haus heraus <span class="pageref">S. 154, 159</span></h3>
+          <p>Details zum Nahkampf-Ablauf: <a class="xref" href="#nahkampf-ablauf">Nahkampf → Ablauf</a></p>
+          <ul>
+            <li>Aus dem Gebäude heraus kann assaultet werden gegen: eine Einheit auf einem <strong>anderen Stockwerk</strong>, in einem <strong>angrenzenden, verbundenen Gebäude</strong>, oder nach <strong>draußen</strong> (auch gegen Fahrzeuge oder nicht angrenzende Gebäude).</li>
+            <li>Ziel <strong>außerhalb</strong> des Gebäudes und mehr als 6" entfernt: darf mit Abwehrfeuer reagieren, aber <strong>erst nachdem</strong> die Angreifer das Haus tatsächlich verlassen haben (also ohne Deckungsbonus durchs Gebäude). Reichweite/Sichtlinie werden zu den benutzten Öffnungen gemessen.</li>
+            <li>Ziel auf <strong>anderem Stockwerk desselben Hauses</strong> oder in einem <strong>angrenzenden Gebäude</strong>: gilt immer als Überraschungsangriff (wie aus &lt;6"), <strong>keine</strong> Abwehrreaktion möglich.</li>
+          </ul>
+        </article>
+
+        <article class="rule" id="haeuser-assault-rein">
+          <h3>Assault in ein Haus hinein <span class="pageref">S. 159</span></h3>
+          <ul>
+            <li>Angreifer von außen bewegen sich zu einer Öffnung im <strong>Erdgeschoss</strong> der Zieleinheit; der restliche Ablauf entspricht einem normalen Assault gegen eine <strong>Defensive Position</strong> (Verteidiger schlägt zuerst zu) – siehe <a class="xref" href="#nahkampf-ablauf">Nahkampf → Ablauf</a>.</li>
+            <li>Gewinnt der Angreifer, darf er mit seinem <strong>Regroup-Move</strong> direkt ins Haus einziehen und die Position der besiegten Einheit übernehmen (einzige Ausnahme von „kein Betreten per Regroup“).</li>
+          </ul>
+        </article>
+
+        <article class="rule" id="haeuser-panzer-assault">
+          <h3>Panzer gegen Haus (Assault/Rammen) <span class="pageref">S. 159–160</span></h3>
+          <ul>
+            <li>Nur <strong>schwere</strong> oder <strong>superschwere</strong> Panzer dürfen versuchen, in ein Holz- oder Backsteingebäude hineinzufahren (wie ein Rammangriff gegen ein Fahrzeug).</li>
+            <li>Bunker, Pillboxen, Betonbauten etc. sind <strong>niemals</strong> assaultierbar, egal wie schwer der Panzer ist.</li>
+            <li>Das Gebäude erhält einen zufälligen Schadenswert: <strong>Holzgebäude 2D6</strong>, <strong>Backsteingebäude 3D6</strong>.</li>
+            <li>Der Panzer würfelt D6 + eigenen Damage-Value (10 für schwer, 11 für superschwer) gegen den Gebäude-Wurf.</li>
+            <li>Gebäude gewinnt (höher): Panzer nimmt nur <em>oberflächlichen</em> Schaden (bei Holzgebäuden generell immer nur oberflächlich), bleibt vor dem Haus stehen.</li>
+            <li>Gleichstand: Panzer nimmt oberflächlichen Schaden, das Gebäude fällt trotzdem in Trümmer.</li>
+            <li>Panzer gewinnt: Gebäude kollabiert komplett zu Trümmern (wie durch einen HE-Treffer), der Panzer bleibt mitten in den Trümmern stehen (Down) und nimmt wie bei jeder Kollision einen zusätzlichen Pin-Marker.</li>
+          </ul>
+        </article>
+
+        <article class="rule" id="haeuser-stockwerk">
+          <h3>Stockwerk / Gebäude wechseln <span class="pageref">S. 154–155</span></h3>
+          <table class="ref">
+            <caption>Bewegung innerhalb/zwischen Gebäuden</caption>
+            <thead><tr><th>Befehl</th><th>Stockwerke</th><th>Angrenzende Gebäude</th><th>Schießen?</th></tr></thead>
+            <tbody>
+              <tr><td>Advance</td><td class="num">1</td><td class="num">1</td><td>Ja</td></tr>
+              <tr><td>Run</td><td class="num">bis zu 2</td><td class="num">bis zu 2</td><td>Nein</td></tr>
+            </tbody>
+          </table>
+          <ul>
+            <li>Ein Run-Befehl kann statt Bewegung auch für einen <strong>Assault ins Nachbarstockwerk/-gebäude</strong> genutzt werden (siehe oben).</li>
+            <li>Ein zugängliches <strong>Flachdach</strong> zählt als oberstes Stockwerk des Gebäudes.</li>
+          </ul>
+        </article>
+
+        <article class="rule" id="haeuser-flammenwerfer">
+          <h3>Flammenwerfer gegen Haus <span class="pageref">S. 157</span></h3>
+          <ul>
+            <li>Nur einsetzbar, wenn eine Öffnung (Fenster, Tür, Lücke) zum Ziel sichtbar ist.</li>
+            <li>Trifft <strong>ohne Deckungswurf</strong> – auch bei „Down“ werden die Treffer nur halbiert (wie bei HE), kein Save.</li>
+            <li><strong>Auch bei einem verfehlten Schuss</strong> fängt das Gebäude auf einer <strong>4, 5 oder 6</strong> (D6) Feuer und gilt ab dann als <strong>unpassierbar</strong> (alle Stockwerke).</li>
+            <li>Überlebende Infanterie im brennenden Haus muss sofort über die Erdgeschoss-Öffnungen raus (wie bei einem immobilisierten Fahrzeug). Artillerie im brennenden Haus ist automatisch vernichtet.</li>
+          </ul>
+          <div class="callout"><strong>Bunker-Ausnahme:</strong> Bunker können nicht in Brand gesetzt werden. Sie haben normalerweise einen 2+ Deckungswurf gegen praktisch alles (auch HE, Luftschlag, Artillerie) – <strong>außer gegen Flammenwerfer</strong>, die als einzige Waffe diesen Save ignorieren.</div>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- ================= NAHKAMPF ================= -->
+    <section class="category" id="nahkampf">
+      <h2>⚔️ Nahkampf (Close Quarters)</h2>
+      <div class="cat-body">
+
+        <article class="rule" id="nahkampf-ablauf">
+          <h3>Ablauf – Standard-Nahkampf (Infanterie/Artillerie) <span class="pageref">S. 106–110</span></h3>
+          <ol>
+            <li><strong>Ziel erklären</strong> – Sichtlinie zum Ziel (oder zum Gebäude) nötig. Bei Pin-Markern auf der Einheit: Befehlstest auf Run nötig.</li>
+            <li><strong>Bewegungsdistanz messen</strong> – um Gelände/Modelle herum, nicht Luftlinie. Über raues Gelände/Hindernisse ist trotz Run-Befehl nur 6" Bewegung möglich.</li>
+            <li><strong>Ziel reagiert</strong> – wurde die Zieleinheit diese Runde noch nicht aktiviert <strong>und</strong> ist der Angriff aus <strong>mehr als 6"</strong> gestartet, darf sie mit <em>Fire</em> reagieren (auch außerhalb der eigentlichen Waffenreichweite zählt als „in Reichweite“). Bei <strong>6" oder weniger</strong> (Überraschungsangriff) gibt es <strong>keine</strong> Reaktion – außer die Einheit ist im Ambush. Waffen mit festem Schussfeld reagieren nur, wenn der Angreifer beim Start im Bogen liegt.</li>
+            <li><strong>Angreifende Modelle bewegen</strong> – in Basekontakt, Angreifer möglichst 1:1 verteilt, danach so gleichmäßig wie möglich auf die Verteidiger.</li>
+            <li><strong>Erste Nahkampfrunde:</strong>
+              <ul>
+                <li><strong>„to Damage“ würfeln:</strong> normalerweise werfen <strong>beide Seiten gleichzeitig</strong>. Alle Angriffe treffen automatisch (kein Zielwurf, keine Deckung, keine Pen-Modifikatoren, keine Waffen-Sonderregeln außer „Assault“). Pins werden im Nahkampf ignoriert.</li>
+                <li><strong>Alle Modelle</strong> beider Seiten kämpfen mit – auch potenzielle eigene Verluste feuern noch mit, bevor sie entfernt werden.</li>
+                <li>Verluste werden abgezogen. Wer <strong>mehr Verluste</strong> verursacht hat, gewinnt die Runde.</li>
+              </ul>
+            </li>
+            <li><strong>Verlierer wird vernichtet</strong> – komplett entfernt (Gefangennahme/Flucht), unabhängig von der genauen Differenz. Wird eine Seite bis auf den letzten Mann ausgelöscht, verliert sie automatisch, auch bei gleicher Verlustzahl.</li>
+            <li><strong>Unentschieden → weitere Runde(n)</strong> sofort im Anschluss, bis eine Seite gewinnt. Ab der zweiten Runde wird immer gleichzeitig gewürfelt (kein Defensive-Position-Bonus mehr).</li>
+            <li><strong>Sieger macht Regroup-Move</strong> – D6" Bewegung, braucht keinen Befehl, ändert nichts an einem evtl. später noch zu vergebenden Befehl. Kein Verlassen des Spielfelds, kein Einsteigen in Transporter, kein Betreten von Gebäuden dabei – <em>außer</em> das erkämpfte Gebäude selbst.</li>
+          </ol>
+          <div class="callout"><strong>Defensive Position-Bonus:</strong> Musste der Angreifer über Hindernis/raues Gelände laufen, oder verteidigt sich der Verteidiger hinter einem Hindernis, schlägt der <strong>Verteidiger zuerst</strong> zu; der Angreifer würfelt danach nur noch mit den <strong>überlebenden</strong> Modellen. Gilt <strong>nicht</strong>, wenn der Verteidiger „Down“ ist (dann wieder normal gleichzeitig).</div>
+        </article>
+
+        <article class="rule" id="nahkampf-transporter">
+          <h3>Nahkampf gegen Transporter</h3>
+          <p>Siehe <a class="xref" href="#transporter-nahkampf">Transporter → Nahkampf gegen einen beladenen Transporter</a> für den vollständigen Ablauf (Abwehrfeuer, Zwangs-Aussteigen, welche Einheit kämpft, kein Defensive-Position-Bonus).</p>
+        </article>
+
+        <article class="rule" id="nahkampf-haeuser">
+          <h3>Nahkampf gegen Häuser</h3>
+          <p>Siehe <a class="xref" href="#haeuser-assault-rein">Häuser → Assault ins Haus</a> (Angriff auf Verteidiger im Erdgeschoss, läuft als Defensive Position) und <a class="xref" href="#haeuser-panzer-assault">Häuser → Panzer gegen Haus</a> (Rammen mit schweren/superschweren Panzern).</p>
+        </article>
+
+        <article class="rule" id="nahkampf-panzerjaeger">
+          <h3>Nahkampf mit Panzerjägern / Panzergranaten gegen Panzer <span class="pageref">S. 144–145, 122</span></h3>
+          <p>Läuft grundsätzlich wie ein normaler Assault, aber mit eigenen Regeln für Trefferwurf und Schaden:</p>
+          <ul>
+            <li>Ein Fahrzeug im <strong>Run</strong> (Würfel zeigt Run) kann <strong>nicht</strong> assaultet werden – zu schnell. Wurde es diese Runde noch gestoppt/immobilisiert, ist es assaultierbar (Würfel zeigt dann Down).</li>
+            <li><strong>Tank Fear:</strong> Eine Infanterieeinheit, die per Run-Befehl einen voll gepanzerten, geschlossenen Panzer (Ketten oder Rad, Hauptsache „fully-enclosed“) assaultieren will, bekommt <strong>-3 auf den Moralwert</strong> für den Befehlstest – dieser Test ist <strong>immer Pflicht</strong>, auch ohne Pin-Marker.</li>
+            <li>Tank Fear entfällt bei <strong>offenen</strong> Fahrzeugen (Halftracks, offene Jagdpanzer/Selbstfahrlafetten) und bei Einheiten mit der Sonderregel <strong>Tank Hunters</strong> (Panzerjäger).</li>
+          </ul>
+          <div class="callout warn">
+            <strong>Trefferwurf richtet sich nach dem Fahrzeugstatus</strong> (nicht generell „nur 6+“!):
+            <ul style="margin-top:.4rem;">
+              <li>Fahrzeug steht/ist Down bzw. hat noch keinen Befehl: jeder Angriff trifft auf einer <strong>4, 5 oder 6</strong>.</li>
+              <li>Fahrzeug macht gerade <strong>Advance</strong>: jeder Angriff trifft nur auf eine <strong>6</strong>.</li>
+            </ul>
+          </div>
+          <p><strong>Schaden – ein Wurf für das ganze Fahrzeug:</strong></p>
+          <ol>
+            <li>Alle erzielten Treffer <strong>zusammenzählen</strong>.</li>
+            <li><strong>1×D6 würfeln</strong> und die Trefferzahl addieren.</li>
+            <li>Diese Summe ist der <strong>Gesamt-Pen-Wert</strong> und wird immer gegen die <strong>Frontpanzerung</strong> des Fahrzeugs verglichen – egal, von welcher Seite assaultiert wurde.</li>
+          </ol>
+          <ul>
+            <li><strong>Ohne</strong> Panzerabwehrwaffen (die Einheit musste also den Tank-Fear-Test bestehen): Ergebnis wird <strong>immer</strong> auf der <em>Oberflächlicher-Schaden</em>-Tabelle abgehandelt, egal wie hoch die Summe über dem nötigen Wert liegt.</li>
+            <li><strong>Mit Tank Hunters</strong>-Sonderregel (Haftladungen, Panzerfaust/-schreck-Granaten, Molotow-Cocktails, Sprengladungen etc. laut Einheitenprofil): <strong>kein</strong> Tank-Fear-Test nötig, und der Schaden wird ganz normal wie bei Fahrzeugbeschuss ausgewertet – <strong>nicht</strong> pauschal auf „oberflächlich“ begrenzt:
+              <table class="ref" style="margin-top:.5rem;">
+                <caption>Schadensergebnis vs. gewürfelte Summe (Gesamt-Pen) – nur mit Tank Hunters</caption>
+                <thead><tr><th>Summe im Vergleich zum nötigen Wert</th><th>Tabelle</th></tr></thead>
+                <tbody>
+                  <tr><td>Exakt der Mindestwert</td><td>Oberflächlicher Schaden</td></tr>
+                  <tr><td>+1 oder +2 darüber</td><td>Voller Schaden</td></tr>
+                  <tr><td>+3 oder mehr darüber</td><td>Massiver Schaden – <strong>zweimal</strong> auf die Voller-Schaden-Tabelle würfeln, schwereres Ergebnis zuerst anwenden</td></tr>
+                </tbody>
+              </table>
+            </li>
+            <li>Überlebt das Fahrzeug den Assault, ist aber (vorher oder dadurch) immobilisiert: sofortiger <strong>Moraltest</strong> fürs Fahrzeug – bei Misserfolg gibt die Crew auf, Fahrzeug ist <strong>Knocked Out</strong>.</li>
+            <li>Danach macht die angreifende Infanterie ganz normal ihren <strong>Regroup-Move</strong>.</li>
+          </ul>
+        </article>
+
+      </div>
+    </section>
+
+    <div class="no-results hidden-by-search" id="noResults">Keine Treffer für diese Suche.</div>
+
+    <footer>
+      <p>Eigene, urheberrechtsfreie Zusammenfassung für den Hausgebrauch am Spieltisch – basiert auf <em>Bolt Action</em>, 3. Edition, © Warlord Games Ltd. Kein Ersatz für das offizielle Regelbuch. Keine Vervielfältigung geschützter Original-Texte oder Abbildungen.</p>
+    </footer>
+  </main>
+</div>
+
+<script>
+(function(){
+  // Theme toggle
+  var root = document.documentElement;
+  var themeBtn = document.getElementById('themeToggle');
+  try{
+    var saved = localStorage.getItem('ba-theme');
+    if(saved) root.setAttribute('data-theme', saved);
+  }catch(e){}
+  themeBtn.addEventListener('click', function(){
+    var current = root.getAttribute('data-theme');
+    var isDark = current ? current === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+    var next = isDark ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    try{ localStorage.setItem('ba-theme', next); }catch(e){}
+  });
+
+  // Mobile TOC toggle
+  var toc = document.getElementById('toc');
+  var tocToggle = document.getElementById('tocToggle');
+  tocToggle.addEventListener('click', function(){
+    toc.classList.toggle('open');
+  });
+  toc.querySelectorAll('a').forEach(function(a){
+    a.addEventListener('click', function(){ toc.classList.remove('open'); });
+  });
+
+  // Active link highlight on scroll
+  var sections = Array.prototype.slice.call(document.querySelectorAll('article.rule, section.category'));
+  var links = Array.prototype.slice.call(document.querySelectorAll('nav.toc a[data-sec]'));
+  function onScroll(){
+    var scrollPos = window.scrollY + 90;
+    var current = null;
+    sections.forEach(function(sec){
+      if(sec.offsetTop <= scrollPos) current = sec.id;
+    });
+    links.forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+    });
+  }
+  document.addEventListener('scroll', onScroll, {passive:true});
+  onScroll();
+
+  // Search / filter
+  var search = document.getElementById('search');
+  var articles = Array.prototype.slice.call(document.querySelectorAll('article.rule'));
+  var categories = Array.prototype.slice.call(document.querySelectorAll('section.category'));
+  var noResults = document.getElementById('noResults');
+
+  function clearMarks(el){
+    el.querySelectorAll('mark').forEach(function(m){
+      var parent = m.parentNode;
+      parent.replaceChild(document.createTextNode(m.textContent), m);
+      parent.normalize();
+    });
+  }
+  function markText(el, term){
+    var walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+    var nodes = [];
+    var n;
+    while(n = walker.nextNode()) nodes.push(n);
+    nodes.forEach(function(node){
+      var idx = node.nodeValue.toLowerCase().indexOf(term);
+      if(idx === -1) return;
+      var span = document.createElement('span');
+      var before = node.nodeValue.slice(0, idx);
+      var match = node.nodeValue.slice(idx, idx + term.length);
+      var after = node.nodeValue.slice(idx + term.length);
+      span.appendChild(document.createTextNode(before));
+      var mark = document.createElement('mark');
+      mark.textContent = match;
+      span.appendChild(mark);
+      span.appendChild(document.createTextNode(after));
+      node.parentNode.replaceChild(span, node);
+    });
+  }
+
+  search.addEventListener('input', function(){
+    var term = search.value.trim().toLowerCase();
+    articles.forEach(function(a){ clearMarks(a); });
+
+    if(!term){
+      articles.forEach(function(a){ a.classList.remove('hidden-by-search'); });
+      categories.forEach(function(c){ c.classList.remove('hidden-by-search'); });
+      noResults.classList.add('hidden-by-search');
+      return;
+    }
+
+    var anyVisible = false;
+    categories.forEach(function(cat){
+      var catArticles = cat.querySelectorAll('article.rule');
+      var catHasMatch = false;
+      catArticles.forEach(function(a){
+        var text = a.textContent.toLowerCase();
+        if(text.indexOf(term) !== -1){
+          a.classList.remove('hidden-by-search');
+          markText(a, term);
+          catHasMatch = true;
+          anyVisible = true;
+        } else {
+          a.classList.add('hidden-by-search');
+        }
+      });
+      cat.classList.toggle('hidden-by-search', !catHasMatch);
+    });
+    noResults.classList.toggle('hidden-by-search', anyVisible);
+  });
+})();
+</script>
+
+</body>
+</html>
