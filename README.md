@@ -16,7 +16,7 @@ nicht als Lernwerkzeug oder Ersatz fürs Regelbuch.
 
 ## 🔗 Live-Version
 
-<!-- URL wird nach dem ersten Deploy hier ergänzt -->
+**https://kalavera1.github.io/BoltAction_Regelreferenz/**
 
 ## Urheberrecht
 
