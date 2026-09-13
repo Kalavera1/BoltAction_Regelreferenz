@@ -22,7 +22,7 @@
   <main id="main">
     <div class="hero">
       <h1>Gefechts-Generator</h1>
-      <p>Fraktionen eintragen, Knopf drücken – der Generator würfelt Szenario, Aufstellungszonen, Aufstellungsart und alles Weitere aus, was sich auswürfeln lässt, und schreibt dazu ein kurzes, thematisch passendes Briefing.</p>
+      <p>Fraktionen eintragen, Knopf drücken – der Generator würfelt Aufstellungszone, Aufstellungsart und Siegbedingung in der Reihenfolge aus, in der sie am Tisch auch gebraucht werden, und schreibt dazu ein kurzes, thematisch passendes Briefing.</p>
       <div class="disclaimer">
         <strong>Hinweis:</strong> Automatisiert die „Arranging a Game"-/Szenario-Kapitel aus <em>Bolt Action</em> 3. Edition (eigene Zusammenfassung, keine Originaltexte). Ersetzt nicht das gemeinsame Absprechen von Gelände &amp; Sondervereinbarungen mit dem Gegner.
       </div>
@@ -49,11 +49,6 @@
           <label for="customB">Eigener Name Fraktion B</label>
           <input type="text" id="customB" placeholder="z. B. Polen">
         </div>
-      </div>
-
-      <div class="field">
-        <label>Punkte pro Seite (nur für den Briefing-Text)</label>
-        <input type="number" id="points" value="1000" min="100" step="50" style="max-width:160px;">
       </div>
 
       <div class="field">
@@ -101,24 +96,26 @@
   /* ---------------- Dice helpers ---------------- */
   function rollDie(sides){ return Math.floor(Math.random()*sides)+1; }
   function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
-  function dieHtml(value, label){
-    return '<div class="die"><div class="face">'+value+'</div><div class="label">'+label+'</div></div>';
+  function dieHtml(value, title, meaning){
+    return '<div class="die"><div class="face">'+value+'</div><div class="label"><b>'+title+'</b>'+meaning+'</div></div>';
   }
-  function rollOff(){
+  // Roll-off between two named sides; re-rolls on a tie. Returns the winner's name plus both rolls.
+  function rollOff(nameA, nameB){
     var a, b;
     do{ a = rollDie(6); b = rollDie(6); } while(a === b);
-    return {a:a, b:b, winner: a > b ? 'A' : 'B'};
+    return {a:a, b:b, winnerName: a > b ? nameA : nameB, loserName: a > b ? nameB : nameA};
   }
+  function truncate(s, n){ return s.length > n ? s.slice(0, n-1)+'…' : s; }
 
   /* ---------------- Faction data ---------------- */
   var FACTIONS = [
-    {id:'de', name:'Deutschland', gen:'deutsche'},
-    {id:'it', name:'Italien', gen:'italienische'},
-    {id:'us', name:'USA', gen:'amerikanische'},
-    {id:'gb', name:'Großbritannien', gen:'britische'},
-    {id:'su', name:'Sowjetunion', gen:'sowjetische'},
-    {id:'jp', name:'Japan', gen:'japanische'},
-    {id:'other', name:'Andere / eigene Fraktion …', gen:''}
+    {id:'de', name:'Deutschland'},
+    {id:'it', name:'Italien'},
+    {id:'us', name:'USA'},
+    {id:'gb', name:'Großbritannien'},
+    {id:'su', name:'Sowjetunion'},
+    {id:'jp', name:'Japan'},
+    {id:'other', name:'Andere / eigene Fraktion …'}
   ];
 
   var THEATRES = {
@@ -156,65 +153,75 @@
   }
 
   /* ---------------- Battle Scenario data ---------------- */
-  var BATTLE_VICTORY = [
-    {roll:1, name:'Seek and Destroy', obj:'Beide Seiten wollen dem Gegner maximalen Schaden zufügen und dabei die eigenen Kräfte erhalten.',
-     win:'1 Siegpunkt pro zerstörter gegnerischer Einheit. 2+ Punkte Vorsprung am Ende = klarer Sieg, sonst Unentschieden.'},
-    {roll:2, name:'Key Positions', obj:'Strategisch wichtige Positionen einnehmen und bis zum Schluss halten.',
-     win:'D3+4 Marker werden abwechselnd platziert (&gt;12" zueinander, &gt;6" vom Tischrand). Kontrolle = eigene Infanterie-/Artillerie­einheit &lt;3" dran, kein Feind &lt;3" dran. Wer am Ende mehr Marker hält, gewinnt – sonst Unentschieden.',
-     extra:function(){ return {label:'Anzahl Objective-Marker', value:rollDie(3)+4, note:'(D3+4)'}; }},
-    {roll:3, name:'Breakthrough', obj:'So viele eigene Einheiten wie möglich über die gegnerische Aufstellungskante hinausbringen.',
-     win:'3 Punkte je Einheit, die die gegnerische Tischkante verlässt; 1 Punkt je eigener Einheit komplett in der gegnerischen Zone am Spielende. 2+ Punkte Vorsprung = Sieg.',
-     note:'⚠️ In diesem Szenario sind <strong>keine Reserven</strong> erlaubt – wird bei der Aufstellungsart „Fog of War" gewürfelt, muss neu gewürfelt werden.'},
-    {roll:4, name:'Top Secret', obj:'Ein abgestürztes Kurierflugzeug hat einen Aktenkoffer mit Geheimdokumenten verloren – er liegt in der Tischmitte (zählt als unpassierbares Gelände).',
-     win:'Eine Infanterie-Einheit berührt/betritt den Koffer per Advance/Run und trägt ihn fortan mit sich. Trägereinheit komplett vernichtet → Koffer bleibt liegen; im Nahkampf verloren → geht an den Sieger. Bringt eine Einheit den Koffer über die <strong>eigene</strong> Aufstellungskante hinaus, endet das Spiel sofort mit ihrem Sieg – sonst Unentschieden.',
-     note:'Alle Einheiten (auch Infiltrators) müssen anfangs &gt;12" vom Koffer entfernt aufgestellt werden.'},
-    {roll:5, name:'Demolition', obj:'Die gegnerische Feldbasis zerstören und gleichzeitig die eigene verteidigen.',
-     win:'Verlierer eines Losentscheids platziert seine Basis zuerst (eigene Zone, ≤20" von der Mittellinie), dann der Gegner. Rundenende: 1 Würfel pro eigener nicht-DOWN Infanterie-/Artillerieeinheit &lt;3" an der gegn. Basis, auf 4+ ist sie zerstört. Wer zuerst die gegnerische Basis zerstört und die eigene noch steht, gewinnt sofort. Fallen beide gleichzeitig: Unentschieden.',
-     note:'Alle Einheiten müssen &gt;18" von der gegnerischen Basis entfernt aufgestellt werden.'},
-    {roll:6, name:'Hold Until Relieved', obj:'Ein strategisches Ziel in der Tischmitte erobern und bis zum Spielende halten.',
-     win:'Kontrolle wie bei Key Positions (eigene Einheit &lt;3", kein Feind &lt;3"). Wer am Spielende kontrolliert, gewinnt – sonst Unentschieden.'}
-  ];
   var DEPLOY_ZONES = [
-    {min:1, max:3, name:'Long Edges (lange Kanten)', desc:'Tisch wird in zwei Hälften geteilt, jeder sitzt an einer langen Kante. Beide würfeln, höherer Wurf sucht sich seine Hälfte aus, der Rest geht an den Gegner.', svg:'edges'},
-    {min:4, max:6, name:'Quarters (Viertel)', desc:'Tisch wird geviertelt. Beide würfeln, höherer Wurf sucht sich sein Viertel aus, der Gegner bekommt das diagonal gegenüberliegende.', svg:'quarters'}
+    {min:1, max:3, name:'Long Edges (lange Kanten)', desc:'Der Tisch wird in zwei Hälften geteilt, jeder sitzt an einer langen Kante.', svg:'edges'},
+    {min:4, max:6, name:'Quarters (Viertel)', desc:'Der Tisch wird geviertelt, jeder verteidigt ein Viertel.', svg:'quarters'}
   ];
   var DEPLOY_TYPES = [
-    {min:1, max:3, name:'Meeting Engagement', desc:'Zu Beginn steht <strong>nichts</strong> auf dem Tisch (außer Infiltrators/Spotter, siehe unten). Der Gewinner eines Losentscheids erklärt zuerst, wie viele Einheiten (bis zur Hälfte, abgerundet) in Reserve bleiben, sowie Infiltrators/Transport-Zuordnung – danach der Gegner. Alle übrigen Einheiten bilden die „erste Welle" und <strong>müssen</strong> in Runde 1 vom eigenen Rand aus mit Advance/Run auf den Tisch (kein Befehlstest nötig, aber kein Assault möglich).'},
-    {min:4, max:5, name:'Prepared Positions', desc:'Wie bei Meeting Engagement dürfen bis zur Hälfte (abgerundet) der Einheiten in Reserve. Alle übrigen, nicht transportierten/infiltrierenden Einheiten werden aber <strong>vor</strong> Rundenbeginn komplett aufgestellt: pro aufzustellender Einheit einen Orderwürfel in den Beutel, ziehen und die zugehörige Einheit aufstellen – bis der Beutel leer ist.'},
-    {min:6, max:6, name:'Fog of War', desc:'<strong>Mindestens</strong> die Hälfte (aufgerundet!) der Einheiten muss in Reserve. Der Rest wird wie bei Prepared Positions nacheinander aufgestellt. <strong>Kein Ausflankieren</strong> möglich – dafür dürfen alle Reserven von <strong>jeder beliebigen</strong> Tischkante her ins Spiel kommen, nicht nur vom eigenen Rand.'}
+    {min:1, max:3, key:'meeting', name:'Meeting Engagement',
+     desc:'Zu Beginn steht <strong>nichts</strong> auf dem Tisch (außer Infiltrators/Spotter, siehe unten). Der Gewinner eines Losentscheids erklärt zuerst, wie viele Einheiten (bis zur Hälfte, abgerundet) in Reserve bleiben, sowie Infiltrators-/Transport-Zuordnung – danach der Gegner. Alle übrigen Einheiten bilden die „erste Welle" und <strong>müssen</strong> in Runde 1 vom eigenen Rand aus mit Advance/Run auf den Tisch (kein Befehlstest nötig, aber kein Assault möglich).'},
+    {min:4, max:5, key:'prepared', name:'Prepared Positions',
+     desc:'Wie bei Meeting Engagement dürfen bis zur Hälfte (abgerundet) der Einheiten in Reserve. Alle übrigen, nicht transportierten/infiltrierenden Einheiten werden aber <strong>vor</strong> Rundenbeginn komplett aufgestellt: pro aufzustellender Einheit einen Orderwürfel in den Beutel, ziehen und die zugehörige Einheit aufstellen – bis der Beutel leer ist.'},
+    {min:6, max:6, key:'fog', name:'Fog of War',
+     desc:'<strong>Mindestens</strong> die Hälfte (aufgerundet!) der Einheiten muss in Reserve. Der Rest wird wie bei Prepared Positions nacheinander aufgestellt. <strong>Kein Ausflankieren</strong> möglich – dafür dürfen alle Reserven von <strong>jeder beliebigen</strong> Tischkante her ins Spiel kommen, nicht nur vom eigenen Rand.'}
+  ];
+  var BATTLE_VICTORY = [
+    {roll:1, name:'Seek and Destroy', closing:'die Vernichtung feindlicher Kräfte auf offenem Feld',
+     obj:'Beide Seiten wollen dem Gegner maximalen Schaden zufügen und dabei die eigenen Kräfte erhalten.',
+     win:'1 Siegpunkt pro zerstörter gegnerischer Einheit. 2+ Punkte Vorsprung am Ende = klarer Sieg, sonst Unentschieden.'},
+    {roll:2, name:'Key Positions', closing:'mehrere verstreute Schlüsselstellungen im Gelände',
+     obj:'Strategisch wichtige Positionen einnehmen und bis zum Schluss halten.',
+     win:'D3+4 Marker werden abwechselnd platziert (&gt;12" zueinander, &gt;6" vom Tischrand). Kontrolle = eigene Infanterie-/Artillerieeinheit &lt;3" dran, kein Feind &lt;3" dran. Wer am Ende mehr Marker hält, gewinnt – sonst Unentschieden.',
+     extra:function(){ return {label:'Anzahl Objective-Marker', value:rollDie(3)+4, meaning:'(D3+4) → so viele Marker werden verdeckt platziert'}; }},
+    {roll:3, name:'Breakthrough', closing:'den Durchbruch durch die gegnerischen Linien',
+     obj:'So viele eigene Einheiten wie möglich über die gegnerische Aufstellungskante hinausbringen.',
+     win:'3 Punkte je Einheit, die die gegnerische Tischkante verlässt; 1 Punkt je eigener Einheit komplett in der gegnerischen Zone am Spielende. 2+ Punkte Vorsprung = Sieg.',
+     note:'⚠️ In diesem Szenario sind <strong>keine Reserven</strong> erlaubt – wurde oben bei der Aufstellungsart „Fog of War" gewürfelt, muss diese neu gewürfelt werden.'},
+    {roll:4, name:'Top Secret', closing:'einen abgestürzten Kurier mit brisanten Geheimdokumenten',
+     obj:'Ein abgestürztes Kurierflugzeug hat einen Aktenkoffer mit Geheimdokumenten verloren – er liegt in der Tischmitte (zählt als unpassierbares Gelände).',
+     win:'Eine Infanterie-Einheit berührt/betritt den Koffer per Advance/Run und trägt ihn fortan mit sich. Trägereinheit komplett vernichtet → Koffer bleibt liegen; im Nahkampf verloren → geht an den Sieger. Bringt eine Einheit den Koffer über die <strong>eigene</strong> Aufstellungskante hinaus, endet das Spiel sofort mit ihrem Sieg – sonst Unentschieden.',
+     note:'Alle Einheiten (auch Infiltrators) müssen anfangs &gt;12" vom Koffer entfernt aufgestellt werden.'},
+    {roll:5, name:'Demolition', closing:'die gegenseitige Zerstörung der rückwärtigen Stützpunkte',
+     obj:'Die gegnerische Feldbasis zerstören und gleichzeitig die eigene verteidigen.',
+     win:'Verlierer eines Losentscheids platziert seine Basis zuerst (eigene Zone, ≤20" von der Mittellinie), dann der Gegner. Rundenende: 1 Würfel pro eigener nicht-DOWN Infanterie-/Artillerieeinheit &lt;3" an der gegn. Basis, auf 4+ ist sie zerstört. Wer zuerst die gegnerische Basis zerstört und die eigene noch steht, gewinnt sofort. Fallen beide gleichzeitig: Unentschieden.',
+     note:'Alle Einheiten müssen &gt;18" von der gegnerischen Basis entfernt aufgestellt werden.'},
+    {roll:6, name:'Hold Until Relieved', closing:'ein strategisch wichtiges Bauwerk in der Mitte des Geländes',
+     obj:'Ein strategisches Ziel in der Tischmitte erobern und bis zum Spielende halten.',
+     win:'Kontrolle wie bei Key Positions (eigene Einheit &lt;3", kein Feind &lt;3"). Wer am Spielende kontrolliert, gewinnt – sonst Unentschieden.'}
   ];
 
   var STORY_SCENARIOS = [
-    {id:1, name:'Envelopment',
-     deployment:'Losentscheid (Gleichstand: neu würfeln) – Gewinner wählt Angreifer oder Verteidiger. Verteidiger wählt eine lange Kante, stellt mindestens die Hälfte seiner Einheiten dort auf (Hidden Deployment erlaubt), Rest in Reserve. Angreifer stellt anfangs nichts auf und meldet mindestens die Hälfte seiner Armee als „erste Welle" (Rest Reserve). <strong>Kein Ausflankieren</strong> für Reserven in diesem Szenario.',
+    {id:1, name:'Envelopment', closing:'die Einkesselung der gegnerischen Stellung',
+     deployment:'Verteidiger wählt eine lange Kante, stellt mindestens die Hälfte seiner Einheiten dort auf (Hidden Deployment erlaubt), Rest in Reserve. Angreifer stellt anfangs nichts auf und meldet mindestens die Hälfte seiner Armee als „erste Welle" (Rest Reserve). <strong>Kein Ausflankieren</strong> für Reserven in diesem Szenario.',
      objective:'Angreifer will möglichst viele Einheiten in die/durch die gegnerische Zone bringen (darf bewusst über die gegnerische Kante hinausziehen); Verteidiger will das verhindern.',
      bombardment:'normal',
      firstTurn:'Angreifer muss die komplette erste Welle in Runde 1 hereinbringen (Advance/Run, kein Befehlstest nötig).',
      duration:'Ende Runde 6: Wurf 1–3 = Spielende, 4–6 = eine weitere Runde.',
      victory:'Angreifer: 1 Punkt je zerstörter Einheit, 2 Punkte je eigener Einheit in der gegnerischen Zone, 3 Punkte je Einheit über die gegnerische Kante hinaus. Verteidiger: 2 Punkte je zerstörter Angreifer-Einheit. 2+ Punkte Vorsprung = klarer Sieg, sonst Unentschieden.'},
-    {id:2, name:'Manhunt',
+    {id:2, name:'Manhunt', closing:'die Jagd auf einen hochrangigen Offizier',
      deployment:'Verteidiger wählt eine lange Kante und stellt die Hälfte seiner Einheiten (abgerundet) innerhalb 12" der Tischmitte auf (Hidden Deployment erlaubt) – der ranghöchste Offizier <strong>muss</strong> dabei sein, Fahrzeuge nach Möglichkeit in Reserve. Angreifer meldet die Hälfte seiner Einheiten (aufgerundet) als erste Welle, Rest Reserve.',
      objective:'Der Angreifer will den ranghöchsten gegnerischen Offizier in einem Nahkampf ausschalten (gleichrangig mehrfach vorhanden → teuerstes Team ist das Ziel).',
      bombardment:'manhunt',
-     firstTurn:'Erste Welle muss in Runde 1 herein (Advance/Run, kein Befehlstest). Reserven im Verlauf: dürfen von jeder Tischkante herein außer der, von der zuletzt eine gegnerische Reserve kam („Fog of War"-Sonderregel dieses Szenarios).',
+     firstTurn:'Erste Welle muss in Runde 1 herein (Advance/Run, kein Befehlstest). Reserven im Verlauf: dürfen von jeder Tischkante herein außer der, von der zuletzt eine gegnerische Reserve kam.',
      duration:'Ende Runde 7: Wurf 1–3 = Spielende, 4–6 = eine weitere Runde – oder sofort, wenn der Offizier fällt/gefangen wird.',
      victory:'Fällt der Offizier im Nahkampf: Angreifer gewinnt. Lebt er am Spielende noch: Verteidiger gewinnt. Stirbt er auf andere Weise (z. B. durch Beschuss): Unentschieden.'},
-    {id:3, name:'Point Defence',
-     deployment:'Losentscheid – Gewinner wählt Angreifer/Verteidiger. Verteidiger wählt lange Kante, stellt mindestens die Hälfte seiner Einheiten dort auf (Hidden Deployment erlaubt) und legt <strong>drei</strong> Ziele in der eigenen Zone fest (je &gt;6" von der eigenen Kante, alle &gt;24" zueinander). Angreifer meldet mindestens die Hälfte als erste Welle, Rest Reserve.',
+    {id:3, name:'Point Defence', closing:'drei umkämpfte Schlüsselstellungen',
+     deployment:'Verteidiger wählt lange Kante, stellt mindestens die Hälfte seiner Einheiten dort auf (Hidden Deployment erlaubt) und legt <strong>drei</strong> Ziele in der eigenen Zone fest (je &gt;6" von der eigenen Kante, alle &gt;24" zueinander). Angreifer meldet mindestens die Hälfte als erste Welle, Rest Reserve.',
      objective:'Angreifer will alle drei Ziele erobern, Verteidiger will das verhindern. Alle Ziele gehören zu Spielbeginn dem Verteidiger, unabhängig von der Truppenlage.',
      bombardment:'normal',
      firstTurn:'Erste Welle muss in Runde 1 herein (Advance/Run, kein Befehlstest).',
      duration:'Ende Runde 6: Wurf 1–3 = Spielende, 4–6 = eine weitere Runde.',
      victory:'Angreifer hält 2 oder 3 Ziele → Angreifer gewinnt. Hält er genau 1 → Unentschieden. Hält er keins → Verteidiger gewinnt. Kontrolle: eigene Infanterie-/Artillerieeinheit (oder Transport mit einer solchen) &lt;3" dran, kein Feind &lt;3".'},
-    {id:4, name:'Land Grab',
-     deployment:'Tisch in Viertel geteilt. Losentscheid – Gewinner wählt eine lange Seite <em>und</em> ein Viertel darauf, erklärt Reserven (bis zur Hälfte, abgerundet). Gegner bekommt das diagonal gegenüberliegende Viertel und erklärt ebenfalls Reserven. Aufstellung abwechselnd per gezogenem Orderwürfel, jeweils &gt;12" von der Tischmitte, Hidden Deployment erlaubt. <strong>Kein Ausflankieren</strong> in diesem Szenario.',
+    {id:4, name:'Land Grab', closing:'die Kontrolle über mehrere Geländeabschnitte',
+     deployment:'Tisch in Viertel geteilt. Gewinner des Losentscheids wählt eine lange Seite <em>und</em> ein Viertel darauf, erklärt Reserven (bis zur Hälfte, abgerundet). Gegner bekommt das diagonal gegenüberliegende Viertel und erklärt ebenfalls Reserven. Aufstellung abwechselnd per gezogenem Orderwürfel, jeweils &gt;12" von der Tischmitte, Hidden Deployment erlaubt. <strong>Kein Ausflankieren</strong> in diesem Szenario.',
      objective:'Beide Seiten wollen so viele Tischviertel wie möglich für sich beanspruchen und dem Gegner Schaden zufügen.',
      bombardment:'both',
      firstTurn:'Keine Vorgabe – normaler Rundenablauf ab Runde 1 (keine erzwungene erste Welle, da bereits komplett aufgestellt wurde).',
      duration:'Ende Runde 6: Wurf 1–3 = Spielende, 4–6 weitere Runde; danach ggf. Ende Runde 7 dieselbe Probe erneut.',
-     victory:'1 Punkt je zerstörter gegnerischer Einheit. 1 Punkt je eigener Einheit komplett in einem der beiden neutralen Viertel, 3 Punkte je eigener Einheit komplett im gegnerischen Viertel. 2+ Punkte Vorsprung = klarer Sieg, sonst Unentschieden.'},
-    {id:5, name:'Surrounded!',
-     deployment:'Losentscheid – Gewinner wählt Angreifer/Verteidiger. Verteidiger stellt die Hälfte seiner Einheiten (abgerundet) innerhalb 12" der Tischmitte auf (Hidden Deployment erlaubt), Rest in Reserve. Angreifer meldet die Hälfte (aufgerundet) als erste Welle, Rest Reserve.',
+     victory:'1 Punkt je zerstörter gegnerischer Einheit. 1 Punkt je eigener Einheit komplett in einem der beiden neutralen Viertel, 3 Punkte je eigener Einheit komplett im gegnerischen Viertel. 2+ Punkte Vorsprung = klarer Sieg, sonst Unentschieden.',
+     zoneShape:'quarters', noAttackerDefender:true},
+    {id:5, name:'Surrounded!', closing:'die Vernichtung der eingeschlossenen Verteidiger',
+     deployment:'Verteidiger stellt die Hälfte seiner Einheiten (abgerundet) innerhalb 12" der Tischmitte auf (Hidden Deployment erlaubt), Rest in Reserve. Angreifer meldet die Hälfte (aufgerundet) als erste Welle, Rest Reserve.',
      objective:'Beide Seiten wollen den Gegner vernichten und dabei die eigenen Kräfte erhalten – klassische Vernichtungsschlacht rund um den eingeschlossenen Verteidiger.',
      bombardment:'normal',
      firstTurn:'Angreifer muss die komplette erste Welle in Runde 1 hereinbringen (Advance/Run, kein Befehlstest). Reserven im Verlauf: dürfen von jeder Tischkante herein außer der, von der zuletzt eine gegnerische Reserve kam.',
@@ -253,33 +260,45 @@
   });
   document.querySelector('#systemRadios .radio-pill').classList.add('checked');
 
-  /* ---------------- SVG deployment diagrams ---------------- */
-  function svgEdges(highlightA){
+  function factionLabel(sel, customInput){
+    if(sel.value === 'other'){
+      var v = customInput.value.trim();
+      return v || 'Unbekannte Streitmacht';
+    }
+    return FACTIONS.filter(function(x){ return x.id === sel.value; })[0].name;
+  }
+
+  /* ---------------- SVG deployment diagrams (labelled with real faction names) ---------------- */
+  function svgEdges(nameWinner, nameOther, winnerIsLeft){
+    var leftName = winnerIsLeft ? nameWinner : nameOther;
+    var rightName = winnerIsLeft ? nameOther : nameWinner;
+    var leftFill = winnerIsLeft ? 'var(--olive)' : 'var(--tan)';
+    var rightFill = winnerIsLeft ? 'var(--tan)' : 'var(--olive)';
     return '<svg width="220" height="150" viewBox="0 0 220 150">'+
-      '<rect x="1" y="1" width="109" height="148" fill="'+(highlightA?'var(--olive)':'var(--bg-alt)')+'" stroke="var(--rule)"/>'+
-      '<rect x="110" y="1" width="109" height="148" fill="'+(highlightA?'var(--bg-alt)':'var(--olive)')+'" stroke="var(--rule)"/>'+
-      '<text x="55" y="78" text-anchor="middle" fill="'+(highlightA?'#fff':'var(--ink-soft)')+'" font-size="12">A</text>'+
-      '<text x="165" y="78" text-anchor="middle" fill="'+(highlightA?'var(--ink-soft)':'#fff')+'" font-size="12">B</text>'+
+      '<rect x="1" y="1" width="109" height="148" fill="'+leftFill+'" stroke="var(--rule)"/>'+
+      '<rect x="110" y="1" width="109" height="148" fill="'+rightFill+'" stroke="var(--rule)"/>'+
+      '<text x="55" y="78" text-anchor="middle" fill="#fff" font-size="11">'+truncate(leftName,14)+'</text>'+
+      '<text x="165" y="78" text-anchor="middle" fill="#3a3b2c" font-size="11">'+truncate(rightName,14)+'</text>'+
       '</svg>';
   }
-  function svgQuarters(aQuarter){
-    // aQuarter: 'tl','tr','bl','br' — a occupies that quarter, opposite is b
-    var opp = {tl:'br',tr:'bl',bl:'tr',br:'tl'}[aQuarter];
+  function svgQuarters(nameWinner, nameOther){
+    var corners = ['tl','tr','bl','br'];
+    var winnerQ = pick(corners);
+    var opp = {tl:'br',tr:'bl',bl:'tr',br:'tl'}[winnerQ];
     var boxes = {tl:[1,1],tr:[110,1],bl:[1,75],br:[110,75]};
-    var fillA = 'var(--olive)', fillB = 'var(--tan)', fillN = 'var(--bg-alt)';
     var html = '<svg width="220" height="150" viewBox="0 0 220 150">';
     Object.keys(boxes).forEach(function(k){
-      var fill = k===aQuarter ? fillA : (k===opp ? fillB : fillN);
+      var fill = k===winnerQ ? 'var(--olive)' : (k===opp ? 'var(--tan)' : 'var(--bg-alt)');
       html += '<rect x="'+boxes[k][0]+'" y="'+boxes[k][1]+'" width="109" height="74" fill="'+fill+'" stroke="var(--rule)"/>';
     });
     var cx = {tl:55,tr:165,bl:55,br:165}, cy = {tl:38,tr:38,bl:112,br:112};
-    html += '<text x="'+cx[aQuarter]+'" y="'+cy[aQuarter]+'" text-anchor="middle" fill="#fff" font-size="12">A</text>';
-    html += '<text x="'+cx[opp]+'" y="'+cy[opp]+'" text-anchor="middle" fill="#3a3b2c" font-size="12">B</text>';
+    html += '<text x="'+cx[winnerQ]+'" y="'+cy[winnerQ]+'" text-anchor="middle" fill="#fff" font-size="11">'+truncate(nameWinner,12)+'</text>';
+    html += '<text x="'+cx[opp]+'" y="'+cy[opp]+'" text-anchor="middle" fill="#3a3b2c" font-size="11">'+truncate(nameOther,12)+'</text>';
     html += '</svg>';
     return html;
   }
 
-  /* ---------------- Persistent reference blocks (always shown) ---------------- */
+  /* ---------------- Persistent reference blocks (always shown, at the end) ---------------- */
   function referenceBlocksHtml(){
     return ''+
     '<div class="result-card">'+
@@ -301,173 +320,189 @@
     '</div>';
   }
 
-  /* ---------------- Flavor text generator ---------------- */
-  function factionLabel(sel, customInput){
-    if(sel.value === 'other'){
-      var v = customInput.value.trim();
-      return v || 'Unbekannte Streitmacht';
-    }
-    var f = FACTIONS.filter(function(x){ return x.id === sel.value; })[0];
-    return f.name;
-  }
-  function factionMeta(sel){
-    return FACTIONS.filter(function(x){ return x.id === sel.value; })[0];
-  }
-
-  function buildBriefing(scenarioName, pts){
-    var idA = selA.value, idB = selB.value;
-    var nameA = factionLabel(selA, document.getElementById('customA'));
-    var nameB = factionLabel(selB, document.getElementById('customB'));
-    var metaA = factionMeta(selA), metaB = factionMeta(selB);
-
-    var tKey = (idA !== 'other' && idB !== 'other') ? theatreKey(idA, idB) : null;
-    var envPool = ENVIRONMENTS, locText, yearText, theatreName;
-
-    if(tKey){
-      var t = THEATRES[tKey];
-      theatreName = t.name;
-      locText = 'bei ' + pick(t.locs);
-      yearText = (t.years[0] + Math.floor(Math.random()*(t.years[1]-t.years[0]+1)));
-      envPool = ENV_BY_THEATRE[tKey] || ENVIRONMENTS;
-    } else if(idA === idB && idA !== 'other'){
-      theatreName = null;
-      locText = 'in einem internen Planspiel/Übungsgefecht';
-      yearText = 1939 + Math.floor(Math.random()*7);
-    } else {
-      theatreName = null;
-      locText = pick(GENERIC_LOCS);
-      yearText = 1939 + Math.floor(Math.random()*7);
-    }
-
-    var env = pick(envPool);
-
-    var unhistoricalNote = '';
-    if(!tKey && idA !== idB && idA !== 'other' && idB !== 'other'){
-      unhistoricalNote = '<p class="meta">⚠️ '+nameA+' und '+nameB+' standen sich historisch nicht als Gegner gegenüber (beide auf derselben Seite bzw. keine dokumentierten Gefechte) – hier als freies „Was-wäre-wenn"-Gefecht behandelt.</p>';
-    }
-
-    var openings = [
-      'Melderfunk aus der Etappe: '+nameA+'-Verbände sind auf '+nameB+'-Kräfte '+locText+' gestoßen.',
-      'Die Lage hat sich zugespitzt – '+nameA+' und '+nameB+' liefern sich '+locText+' ein erbittertes Gefecht.',
-      'Aufklärer melden Feindkontakt: '+nameB+'-Einheiten graben sich '+locText+' ein, '+nameA+' rückt zum Angriff vor.',
-      'Ein weiterer Frontabschnitt gerät in Bewegung – '+locText+' treffen '+nameA+' und '+nameB+' aufeinander.'
-    ];
-    var closings = [
-      'Das Gelände: '+env+'. Gefechtsstärke ca. '+pts+' Punkte je Seite. Auftrag: „'+scenarioName+'".',
-      'Erwartetes Gelände: '+env+'. Beide Seiten treten mit rund '+pts+' Punkten an – Missionstyp „'+scenarioName+'".',
-      'Umgebung: '+env+'. Kräfteansatz beidseitig ca. '+pts+' Punkte, Missionsziel „'+scenarioName+'".'
-    ];
-
-    var yearLine = theatreName ? ' ('+theatreName+', ca. '+yearText+')' : ' (ca. '+yearText+')';
-
-    return '<p>'+pick(openings)+yearLine+'</p><p>'+pick(closings)+'</p>' + unhistoricalNote;
-  }
-
-  /* ---------------- Table / terrain reference ---------------- */
-  function tableInfoHtml(zoneResult){
-    var diagram = zoneResult.svg === 'quarters' ? svgQuarters(pick(['tl','tr','bl','br'])) : svgEdges(Math.random()<0.5);
+  function terrainInfoHtml(){
     return '<div class="result-card">'+
       '<h3>🗺️ Tisch &amp; Gelände</h3>'+
       '<p><strong>Standardgröße:</strong> 6′×4′ (ca. 183×122 cm). Kleinerer Tisch (≤3′ breit)? Dann alle Reichweiten/Distanzen halbieren.</p>'+
       '<p><strong>Geländeempfehlung</strong> (kein Pflichtwurf): mindestens 4 große, sichtblockierende Geländestücke (Gebäude, dichter Wald, Hügel/Böschung) – möglichst je eines pro Viertel – plus reichlich niedrige Deckung (Hecken, Trümmer, Krater, Mauern) für die Infanterie. Vorher mit dem Gegner absprechen, was jedes Stück im Spiel bedeutet.</p>'+
-      '<div class="deploy-map">'+diagram+
-        '<div class="map-note"><strong>'+zoneResult.name+':</strong> '+zoneResult.desc+'</div>'+
-      '</div>'+
     '</div>';
+  }
+
+  /* ---------------- Narrative briefing ---------------- */
+  var NARRATIVE_TEMPLATES = {
+    meeting: [
+      'Nach tagelangen Rückzugsgefechten {LOC} treffen {SIDE1}- und {SIDE2}-Verbände unvermittelt aufeinander. Beide Seiten marschieren durch {ENV}, ohne Zeit zum Eingraben – ein offenes Gefecht ist unausweichlich. In den kommenden Stunden steht der Kampf um {CLOSING} bevor.',
+      'Aufklärer beider Seiten haben sich {LOC} verschätzt: {SIDE1}- und {SIDE2}-Kolonnen stoßen mitten in {ENV} aufeinander. Es bleibt keine Zeit für Stellungsbau – nur für das direkte Aufeinandertreffen. Es kommt zum offenen Gefecht um {CLOSING}.'
+    ],
+    prepared: [
+      '{DEFENDER} hat sich {LOC} in {ENV} eingerichtet und hält befestigte Stellungen. {ATTACKER} rückt nun mit Bedacht heran, kundschaftet das Gelände aus und sucht mit taktischem Geschick nach Schwachstellen in der Verteidigung. In den kommenden Stunden steht der Kampf um {CLOSING} bevor.',
+      '{DEFENDER} hat sich {LOC} verschanzt und wartet in vorbereiteten Stellungen auf den Feind. {ATTACKER}-Verbände nähern sich vorsichtig durch {ENV}, um die Lage zu sondieren, bevor sie den entscheidenden Vorstoß wagen. Der Kampf um {CLOSING} steht bevor.'
+    ],
+    fog: [
+      'Die Lage {LOC} ist unübersichtlich – Meldungen widersprechen sich, Verstärkungen beider Seiten sind noch unterwegs. {SIDE1}- und {SIDE2}-Einheiten tasten sich durch {ENV} vor, jederzeit bereit, aus unerwarteter Richtung überrascht zu werden. Im Nebel des Krieges entscheidet sich der Kampf um {CLOSING}.',
+      'Niemand behält {LOC} noch den vollen Überblick: {SIDE1} und {SIDE2} schieben nach und nach Verstärkungen durch {ENV} nach, ohne genau zu wissen, wo der Gegner als Nächstes auftaucht. So beginnt der unübersichtliche Kampf um {CLOSING}.'
+    ]
+  };
+
+  function buildBriefing(ctx){
+    // ctx: {nameA, nameB, idA, idB, closing, family:'meeting'|'prepared'|'fog', attacker, defender (only relevant for 'prepared')}
+    var idA = ctx.idA, idB = ctx.idB, nameA = ctx.nameA, nameB = ctx.nameB;
+    var tKey = (idA !== 'other' && idB !== 'other') ? theatreKey(idA, idB) : null;
+    var envPool = ENVIRONMENTS, loc, year, theatreName;
+
+    if(idA === idB && idA !== 'other'){
+      return '<p>Ein internes Planspiel: zwei '+nameA+'-Verbände üben ein '+ctx.closing+' nachstellendes Manöver gegeneinander – reine Übung, kein Fronteinsatz.</p>';
+    }
+
+    if(tKey){
+      var t = THEATRES[tKey];
+      theatreName = t.name;
+      loc = 'bei ' + pick(t.locs);
+      year = t.years[0] + Math.floor(Math.random()*(t.years[1]-t.years[0]+1));
+      envPool = ENV_BY_THEATRE[tKey] || ENVIRONMENTS;
+    } else {
+      theatreName = null;
+      loc = 'bei ' + pick(GENERIC_LOCS);
+      year = 1939 + Math.floor(Math.random()*7);
+    }
+    var env = pick(envPool);
+
+    var unhistoricalNote = '';
+    if(!tKey && idA !== 'other' && idB !== 'other'){
+      unhistoricalNote = '<p class="meta">⚠️ '+nameA+' und '+nameB+' standen sich historisch nicht als Gegner gegenüber (beide auf derselben Seite bzw. keine dokumentierten Gefechte) – hier als freies „Was-wäre-wenn"-Gefecht behandelt.</p>';
+    }
+
+    var tpl = pick(NARRATIVE_TEMPLATES[ctx.family]);
+    var text = tpl
+      .replace(/\{LOC\}/g, loc)
+      .replace(/\{ENV\}/g, env)
+      .replace(/\{CLOSING\}/g, ctx.closing)
+      .replace(/\{SIDE1\}/g, nameA)
+      .replace(/\{SIDE2\}/g, nameB)
+      .replace(/\{ATTACKER\}/g, ctx.attacker || nameA)
+      .replace(/\{DEFENDER\}/g, ctx.defender || nameB);
+
+    var yearLine = theatreName ? ' <span class="meta" style="font-size:.78rem; opacity:.85;">('+theatreName+', ca. '+year+')</span>' : ' <span class="meta" style="font-size:.78rem; opacity:.85;">(ca. '+year+')</span>';
+
+    return '<p>'+text+yearLine+'</p>' + unhistoricalNote;
   }
 
   /* ---------------- Battle Scenario generation ---------------- */
-  function generateBattleScenario(){
-    var vRoll = rollDie(6);
-    var victory = BATTLE_VICTORY[vRoll-1];
+  function generateBattleScenario(nameA, nameB){
+    // 1) Aufstellungszone
     var zRoll = rollDie(6);
     var zone = DEPLOY_ZONES.filter(function(z){ return zRoll >= z.min && zRoll <= z.max; })[0];
-    var tRoll = rollDie(6);
-    var type = DEPLOY_TYPES.filter(function(t){ return tRoll >= t.min && tRoll <= t.max; })[0];
-
-    var extraDiceHtml = dieHtml(vRoll, '<b>Siegbedingung</b>Battle Scenario Summary') +
-                         dieHtml(zRoll, '<b>Aufstellungszonen</b>1–3 Kanten / 4–6 Viertel') +
-                         dieHtml(tRoll, '<b>Aufstellungsart</b>1–3/4–5/6') ;
-    var extraLine = '';
-    if(victory.extra){
-      var ex = victory.extra();
-      extraDiceHtml += dieHtml(ex.value, '<b>'+ex.label+'</b>'+ex.note);
-    }
-    var zoneRoll = rollOff();
+    var zoneOff = rollOff(nameA, nameB);
+    var diagram = zone.svg === 'quarters'
+      ? svgQuarters(zoneOff.winnerName, zoneOff.loserName)
+      : svgEdges(zoneOff.winnerName, zoneOff.loserName, Math.random()<0.5);
 
     var html = '';
     html += '<div class="result-card">'+
-      '<h3>🎯 Szenario-Typ: Battle Scenario</h3>'+
-      '<div class="dice-row">'+extraDiceHtml+'</div>'+
-      '<p><span class="tag">Siegbedingung</span><strong>'+victory.name+'</strong></p>'+
-      '<p>'+victory.obj+'</p>'+
-      '<p><strong>Sieg:</strong> '+victory.win+'</p>'+
-      (victory.note ? '<div class="callout">'+victory.note+'</div>' : '')+
+      '<p><span class="tag">Battle Scenario</span></p>'+
+      '<h3>📍 1. Aufstellungszone: '+zone.name+'</h3>'+
+      '<div class="dice-row">'+dieHtml(zRoll, 'Aufstellungszonen-Wurf', zRoll+' → '+zone.name+' (1–3 Kanten, 4–6 Viertel)')+'</div>'+
+      '<p>'+zone.desc+'</p>'+
+      '<div class="dice-row">'+dieHtml(zoneOff.a, nameA, 'Losentscheid um die Wahl')+dieHtml(zoneOff.b, nameB, 'Losentscheid um die Wahl')+'</div>'+
+      '<p><strong>'+zoneOff.winnerName+'</strong> hat den Losentscheid gewonnen und sucht sich die Zone/Kante zuerst aus, <strong>'+zoneOff.loserName+'</strong> bekommt den Rest.</p>'+
+      '<div class="deploy-map">'+diagram+'</div>'+
     '</div>';
 
+    // 2) Aufstellungsart / Ablauf der Aufstellung
+    var tRoll = rollDie(6);
+    var type = DEPLOY_TYPES.filter(function(t){ return tRoll >= t.min && tRoll <= t.max; })[0];
     html += '<div class="result-card">'+
-      '<h3>📍 Aufstellungszone: '+zone.name+'</h3>'+
-      '<div class="dice-row">'+dieHtml(zoneRoll.a,'<b>Fraktion A</b>Losentscheid')+dieHtml(zoneRoll.b,'<b>Fraktion B</b>Losentscheid')+'</div>'+
-      '<p>'+zone.desc+' Fraktion '+zoneRoll.winner+' hat den Losentscheid gewonnen und sucht sich die Zone/Kante zuerst aus.</p>'+
-    '</div>';
-
-    html += '<div class="result-card">'+
-      '<h3>🪖 Aufstellungsart: '+type.name+'</h3>'+
+      '<h3>🪖 2. Ablauf der Aufstellung: '+type.name+'</h3>'+
+      '<div class="dice-row">'+dieHtml(tRoll, 'Aufstellungsart-Wurf', tRoll+' → '+type.name+' (1–3 Meeting Engagement, 4–5 Prepared Positions, 6 Fog of War)')+'</div>'+
       '<p>'+type.desc+'</p>'+
     '</div>';
 
-    html += tableInfoHtml(zone);
+    // 3) Siegbedingung
+    var vRoll = rollDie(6);
+    var victory = BATTLE_VICTORY[vRoll-1];
+    var extraDice = '';
+    if(victory.extra){
+      var ex = victory.extra();
+      extraDice = '<div class="dice-row">'+dieHtml(ex.value, ex.label, ex.meaning)+'</div>';
+    }
+    html += '<div class="result-card">'+
+      '<h3>🎯 3. Siegbedingung: '+victory.name+'</h3>'+
+      '<div class="dice-row">'+dieHtml(vRoll, 'Siegbedingungs-Wurf', vRoll+' → '+victory.name)+'</div>'+
+      '<p>'+victory.obj+'</p>'+
+      '<p><strong>Sieg:</strong> '+victory.win+'</p>'+
+      extraDice+
+      (victory.note ? '<div class="callout">'+victory.note+'</div>' : '')+
+    '</div>';
+
+    html += terrainInfoHtml();
     html += referenceBlocksHtml();
 
-    return {html: html, scenarioName: victory.name};
+    return {
+      html: html,
+      briefCtx: {closing: victory.closing, family: type.key}
+    };
   }
 
   /* ---------------- Story Scenario generation ---------------- */
-  function generateStoryScenario(){
+  function generateStoryScenario(nameA, nameB){
     var roll = rollDie(6);
     var wasFreeChoice = (roll === 6);
-    var chosen;
-    if(wasFreeChoice){
-      chosen = pick(STORY_SCENARIOS);
-    } else {
-      chosen = STORY_SCENARIOS[roll-1];
-    }
-    var atkDef = rollOff();
+    var chosen = wasFreeChoice ? pick(STORY_SCENARIOS) : STORY_SCENARIOS[roll-1];
 
     var html = '';
     html += '<div class="result-card">'+
-      '<h3>📖 Szenario-Typ: Story Scenario</h3>'+
-      '<div class="dice-row">'+dieHtml(roll, '<b>Story-Szenario</b>1–5 fest / 6 = freie Wahl')+'</div>'+
-      (wasFreeChoice ? '<p class="meta" style="color:var(--ink-soft); font-size:.85rem;">Ergebnis 6 bedeutet eigentlich „Sieger des Losentscheids wählt frei" – hier zur Automatisierung zufällig simuliert.</p>' : '')+
-      '<p><span class="tag">Szenario</span><strong>'+chosen.name+'</strong></p>'+
+      '<p><span class="tag">Story Scenario</span></p>'+
+      '<h3>📖 Szenario: '+chosen.name+'</h3>'+
+      '<div class="dice-row">'+dieHtml(roll, 'Story-Szenario-Wurf', roll+' → '+(wasFreeChoice ? 'eigentlich freie Wahl (hier zufällig: '+chosen.name+')' : chosen.name))+'</div>'+
     '</div>';
 
+    var attacker = nameA, defender = nameB, roleOff = null, zoneOff = null;
+    if(!chosen.noAttackerDefender){
+      roleOff = rollOff(nameA, nameB);
+      // winner of the roll-off decides; simulate a 50/50 choice of role for flavour
+      var winnerDefends = Math.random() < 0.5;
+      defender = winnerDefends ? roleOff.winnerName : roleOff.loserName;
+      attacker = winnerDefends ? roleOff.loserName : roleOff.winnerName;
+    } else {
+      zoneOff = rollOff(nameA, nameB);
+    }
+
     html += '<div class="result-card">'+
-      '<h3>🪖 Aufstellung</h3>'+
-      '<div class="dice-row">'+dieHtml(atkDef.a,'<b>Fraktion A</b>Losentscheid Angreifer/Verteidiger')+dieHtml(atkDef.b,'<b>Fraktion B</b>Losentscheid Angreifer/Verteidiger')+'</div>'+
-      '<p>Fraktion '+atkDef.winner+' hat den Losentscheid gewonnen und wählt Angreifer oder Verteidiger.</p>'+
+      '<h3>🪖 1. Aufstellung</h3>'+
+      (roleOff ? (
+        '<div class="dice-row">'+dieHtml(roleOff.a, nameA, 'Losentscheid Angreifer/Verteidiger')+dieHtml(roleOff.b, nameB, 'Losentscheid Angreifer/Verteidiger')+'</div>'+
+        '<p><strong>'+roleOff.winnerName+'</strong> hat den Losentscheid gewonnen und entscheidet sich, <strong>'+(defender===roleOff.winnerName?'zu verteidigen':'anzugreifen')+'</strong>. Damit ist <strong>'+defender+'</strong> Verteidiger und <strong>'+attacker+'</strong> Angreifer.</p>'
+      ) : (
+        '<div class="dice-row">'+dieHtml(zoneOff.a, nameA, 'Losentscheid um Seite &amp; Viertel')+dieHtml(zoneOff.b, nameB, 'Losentscheid um Seite &amp; Viertel')+'</div>'+
+        '<p><strong>'+zoneOff.winnerName+'</strong> hat den Losentscheid gewonnen, sucht sich zuerst eine lange Seite und ein Viertel darauf aus – <strong>'+zoneOff.loserName+'</strong> bekommt das diagonal gegenüberliegende Viertel. Keine feste Angreifer-/Verteidiger-Rolle in diesem Szenario.</p>'
+      ))+
       '<p>'+chosen.deployment+'</p>'+
     '</div>';
 
+    var diagram = chosen.zoneShape === 'quarters'
+      ? svgQuarters(zoneOff.winnerName, zoneOff.loserName)
+      : svgEdges(defender, attacker, true);
     html += '<div class="result-card">'+
-      '<h3>🎯 Missionsziel</h3><p>'+chosen.objective+'</p>'+
+      '<h3>🗺️ Karte &amp; Zonen</h3>'+
+      '<div class="deploy-map">'+diagram+'</div>'+
+    '</div>';
+
+    html += '<div class="result-card">'+
+      '<h3>🎯 2. Missionsziel</h3><p>'+chosen.objective+'</p>'+
       '<p><strong>Sieg:</strong> '+chosen.victory+'</p>'+
     '</div>';
 
     if(chosen.bombardment){
       var bRoll = rollDie(6);
       var happens = bRoll >= 2;
-      if(chosen.bombardment === 'manhunt' && bRoll === 6){
-        // natural 6 on the officer's own unit counts as 5 — note only, doesn't change trigger roll
-      }
       html += '<div class="result-card">'+
         '<h3>💥 Vorbereitendes Bombardement</h3>'+
-        '<div class="dice-row">'+dieHtml(bRoll, '<b>Findet statt?</b>2+ = ja, 1 = nein')+'</div>'+
-        '<p>'+(happens ? 'Das Bombardement <strong>findet statt</strong>.' : 'Das Bombardement <strong>bleibt aus</strong> – der Angriff läuft trotzdem wie geplant.')+
+        '<div class="dice-row">'+dieHtml(bRoll, 'Bombardement-Wurf', bRoll+' → '+(happens?'findet statt (2+)':'bleibt aus (nur bei 1)'))+'</div>'+
+        '<p>'+(happens ? 'Das Bombardement <strong>findet statt</strong> – für jede gegnerische Einheit in der betroffenen Zone einmal auf die Tabelle unten würfeln (Bunker/Befestigung: -1 auf den Wurf).' : 'Das Bombardement <strong>bleibt aus</strong> – der Angriff läuft trotzdem wie geplant.')+
         (chosen.bombardment === 'both' ? ' (In diesem Szenario würfelt <strong>jede</strong> Seite einzeln für ihr eigenes Bombardement.)' : '')+
         (chosen.bombardment === 'manhunt' ? ' Sonderregel: würfelt man für die Einheit des Zieloffiziers eine natürliche 6, zählt sie stattdessen nur als 5.' : '')+
         '</p>'+
-        (happens ? '<table class="ref"><caption>Wirkung – 1 Wurf pro gegnerischer Einheit in der betroffenen Aufstellungszone (Bunker/Befestigung: -1 auf den Wurf)</caption><thead><tr><th>Wurf</th><th>Effekt</th></tr></thead><tbody>'+
+        (happens ? '<table class="ref"><thead><tr><th>Wurf</th><th>Effekt</th></tr></thead><tbody>'+
           BOMBARD_TABLE.map(function(b){ return '<tr><td class="num">'+b.r+'</td><td>'+b.e+'</td></tr>'; }).join('')+
           '</tbody></table>' : '')+
       '</div>';
@@ -479,26 +514,24 @@
       '<p><strong>Spielende:</strong> '+chosen.duration+'</p>'+
     '</div>';
 
-    // deployment zone for map diagram: Land Grab = quarters, everything else = long edges
-    var zoneForMap = (chosen.id === 4)
-      ? {name:'Viertel (fest vorgegeben)', desc:'Tisch in vier Viertel geteilt, siehe Aufstellung oben.', svg:'quarters'}
-      : {name:'Lange Kante (fest vorgegeben)', desc:'Tisch in zwei Hälften an den langen Kanten geteilt, siehe Aufstellung oben.', svg:'edges'};
-    html += tableInfoHtml(zoneForMap);
+    html += terrainInfoHtml();
     html += referenceBlocksHtml();
 
-    return {html: html, scenarioName: chosen.name};
+    return {
+      html: html,
+      briefCtx: {closing: chosen.closing, family: 'prepared', attacker: attacker, defender: defender}
+    };
   }
 
   /* ---------------- Main roll handler ---------------- */
-  var lastScenarioName = 'Gefecht';
-  var lastPts = 1000;
+  var lastBriefCtx = null;
 
   function renderBriefing(){
-    var pts = parseInt(document.getElementById('points').value, 10) || 1000;
-    lastPts = pts;
+    var idA = selA.value, idB = selB.value;
     var nameA = factionLabel(selA, document.getElementById('customA'));
     var nameB = factionLabel(selB, document.getElementById('customB'));
-    var brief = buildBriefing(lastScenarioName, pts);
+    var ctx = Object.assign({nameA:nameA, nameB:nameB, idA:idA, idB:idB}, lastBriefCtx);
+    var brief = buildBriefing(ctx);
     var existing = document.getElementById('briefCard');
     var html = '<div class="result-card brief" id="briefCard">'+
       '<h3>📜 Einsatzbriefing — '+nameA+' vs. '+nameB+'</h3>'+
@@ -513,11 +546,13 @@
   }
 
   document.getElementById('rollAll').addEventListener('click', function(){
+    var nameA = factionLabel(selA, document.getElementById('customA'));
+    var nameB = factionLabel(selB, document.getElementById('customB'));
     var system = document.querySelector('#systemRadios input:checked').value;
     if(system === 'random') system = Math.random() < 0.5 ? 'battle' : 'story';
 
-    var result = system === 'battle' ? generateBattleScenario() : generateStoryScenario();
-    lastScenarioName = result.scenarioName;
+    var result = system === 'battle' ? generateBattleScenario(nameA, nameB) : generateStoryScenario(nameA, nameB);
+    lastBriefCtx = result.briefCtx;
 
     document.getElementById('output').innerHTML = result.html;
     renderBriefing();
@@ -526,7 +561,7 @@
   });
 
   document.getElementById('rerollBrief').addEventListener('click', function(){
-    renderBriefing();
+    if(lastBriefCtx) renderBriefing();
   });
 
 })();
