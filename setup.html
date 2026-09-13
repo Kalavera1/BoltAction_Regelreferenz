@@ -113,6 +113,7 @@
   /* ---------------- Faction data ---------------- */
   var FACTIONS = [
     {id:'de', name:'Deutschland', gen:'deutsche'},
+    {id:'it', name:'Italien', gen:'italienische'},
     {id:'us', name:'USA', gen:'amerikanische'},
     {id:'gb', name:'Großbritannien', gen:'britische'},
     {id:'su', name:'Sowjetunion', gen:'sowjetische'},
@@ -126,7 +127,11 @@
     'de-su': {name:'Ostfront', years:[1941,1945], locs:['den Weiten vor Kursk','den Trümmern von Stalingrad','der Weichsel-Front','Minsk','den Vororten von Berlin','Charkow','der Seelower Höhen']},
     'su-jp': {name:'Mandschurei-Grenzkonflikt', years:[1939,1945], locs:['Chalchin Gol','der mandschurischen Grenze','den Höhen am Chasan-See']},
     'us-jp': {name:'Pazifik', years:[1941,1945], locs:['Guadalcanal','Tarawa','Iwo Jima','Okinawa','den Philippinen','Peleliu','Saipan']},
-    'gb-jp': {name:'Burma &amp; Malaya', years:[1941,1945], locs:['dem Dschungel Burmas','Kohima','Singapur','dem Irrawaddy','der Admin Box']}
+    'gb-jp': {name:'Burma &amp; Malaya', years:[1941,1945], locs:['dem Dschungel Burmas','Kohima','Singapur','dem Irrawaddy','der Admin Box']},
+    'de-it': {name:'Italien nach dem Waffenstillstand', years:[1943,1945], locs:['der Gustav-Linie','Monte Cassino','der Gotenlinie','den Abruzzen','Norditalien']},
+    'gb-it': {name:'Nordafrika &amp; Italien', years:[1940,1945], locs:['der Cyrenaika','Tobruk','El Alamein','Sizilien','Monte Cassino','der Gustav-Linie']},
+    'it-us': {name:'Nordafrika, Sizilien &amp; Italien', years:[1942,1945], locs:['Tunesien','Sizilien','Salerno','Anzio','Monte Cassino']},
+    'it-su': {name:'Ostfront (Italienisches Expeditionskorps)', years:[1941,1943], locs:['dem Don-Bogen','der Ukraine','dem Stalingrader Umland']}
   };
   var GENERIC_LOCS = ['einem namenlosen Frontabschnitt','einer zerschossenen Kleinstadt','den Resten eines Bauerndorfs','einer strategisch wichtigen Straßenkreuzung','einem verlassenen Bahnhofsgelände'];
   var ENVIRONMENTS = ['Stadt/Ortschaft (Ruinen, Straßenzüge)','Ackerland mit Hecken (Bocage)','Wald &amp; Hügelland','Küstenabschnitt mit Dünen','Fluss- und Brückenkopf-Gelände','Winter/Schnee','Wüste','Dschungel'];
@@ -136,7 +141,11 @@
     'de-su': ['Winter/Schnee','Stadt/Ortschaft (Ruinen, Straßenzüge)','Wald &amp; Hügelland','Fluss- und Brückenkopf-Gelände'],
     'us-jp': ['Dschungel','Küstenabschnitt mit Dünen'],
     'gb-jp': ['Dschungel','Fluss- und Brückenkopf-Gelände'],
-    'su-jp': ['Wald &amp; Hügelland','Ackerland mit Hecken (Bocage)']
+    'su-jp': ['Wald &amp; Hügelland','Ackerland mit Hecken (Bocage)'],
+    'de-it': ['Wald &amp; Hügelland','Stadt/Ortschaft (Ruinen, Straßenzüge)','Winter/Schnee'],
+    'gb-it': ['Wüste','Wald &amp; Hügelland','Stadt/Ortschaft (Ruinen, Straßenzüge)'],
+    'it-us': ['Wüste','Küstenabschnitt mit Dünen','Wald &amp; Hügelland'],
+    'it-su': ['Winter/Schnee','Ackerland mit Hecken (Bocage)']
   };
 
   function theatreKey(a, b){
