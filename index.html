@@ -4,236 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bolt Action v3 – Regelreferenz</title>
-<style>
-  :root{
-    --bg:#f4f1ea;
-    --bg-alt:#e9e4d6;
-    --panel:#ffffff;
-    --ink:#26261f;
-    --ink-soft:#5b5947;
-    --olive:#4b5320;
-    --olive-dark:#33380f;
-    --olive-light:#6b7a2e;
-    --tan:#c9b98a;
-    --rule:#d8d0ba;
-    --accent:#8a1f11;
-    --link:#4b5320;
-    --code-bg:#efe9d6;
-    --shadow:0 1px 3px rgba(0,0,0,.08);
-  }
-  [data-theme="dark"]{
-    --bg:#1b1c16;
-    --bg-alt:#23241c;
-    --panel:#242519;
-    --ink:#e9e5d6;
-    --ink-soft:#b3ae97;
-    --olive:#9fae5b;
-    --olive-dark:#c7d488;
-    --olive-light:#7c8a45;
-    --tan:#8a7a4f;
-    --rule:#3a3b2c;
-    --accent:#e07a5f;
-    --link:#b7c377;
-    --code-bg:#2d2e21;
-    --shadow:0 1px 3px rgba(0,0,0,.4);
-  }
-  @media (prefers-color-scheme: dark){
-    :root:not([data-theme="light"]){
-      --bg:#1b1c16;
-      --bg-alt:#23241c;
-      --panel:#242519;
-      --ink:#e9e5d6;
-      --ink-soft:#b3ae97;
-      --olive:#9fae5b;
-      --olive-dark:#c7d488;
-      --olive-light:#7c8a45;
-      --tan:#8a7a4f;
-      --rule:#3a3b2c;
-      --accent:#e07a5f;
-      --link:#b7c377;
-      --code-bg:#2d2e21;
-      --shadow:0 1px 3px rgba(0,0,0,.4);
-    }
-  }
-
-  *{box-sizing:border-box;}
-  body{
-    background:var(--bg);
-    color:var(--ink);
-    font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    line-height:1.5;
-    margin:0;
-  }
-  a{color:var(--link);}
-  h1,h2,h3,h4{font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;letter-spacing:.02em;}
-
-  /* ---------- Top bar ---------- */
-  header.topbar{
-    position:sticky; top:0; z-index:50;
-    background:var(--olive-dark);
-    color:#f4f1ea;
-    padding:.7rem 1rem;
-    display:flex; align-items:center; gap:.8rem;
-    box-shadow:var(--shadow);
-  }
-  header.topbar .brand{
-    font-weight:700; font-size:1.05rem; white-space:nowrap;
-    display:flex; align-items:center; gap:.5rem;
-  }
-  header.topbar .brand .badge{
-    background:var(--accent); color:#fff; font-size:.65rem; font-weight:700;
-    padding:.15rem .4rem; border-radius:3px; letter-spacing:.05em;
-  }
-  #search{
-    flex:1; min-width:0;
-    padding:.45rem .7rem;
-    border-radius:5px;
-    border:1px solid transparent;
-    background:rgba(255,255,255,.12);
-    color:#fff;
-    font-size:.95rem;
-  }
-  #search::placeholder{color:#e2ddc9;}
-  #search:focus{outline:2px solid var(--tan); background:rgba(255,255,255,.2);}
-  .icon-btn{
-    background:transparent; border:1px solid rgba(255,255,255,.3); color:#fff;
-    border-radius:5px; padding:.4rem .55rem; cursor:pointer; font-size:1rem; line-height:1;
-  }
-  .icon-btn:hover{background:rgba(255,255,255,.15);}
-
-  /* ---------- Layout ---------- */
-  .layout{
-    display:grid;
-    grid-template-columns:260px 1fr;
-    max-width:1180px;
-    margin:0 auto;
-  }
-  @media (max-width:860px){
-    .layout{grid-template-columns:1fr;}
-    nav.toc{position:static; max-height:none; display:none;}
-    nav.toc.open{display:block;}
-  }
-
-  nav.toc{
-    position:sticky; top:56px;
-    align-self:start;
-    max-height:calc(100vh - 56px);
-    overflow-y:auto;
-    padding:1rem .8rem 2rem;
-    border-right:1px solid var(--rule);
-    background:var(--bg-alt);
-  }
-  nav.toc h2{
-    font-size:.72rem; text-transform:uppercase; letter-spacing:.08em;
-    color:var(--ink-soft); margin:1rem 0 .35rem; padding-top:.6rem;
-    border-top:1px solid var(--rule);
-  }
-  nav.toc h2:first-child{margin-top:0; border-top:none; padding-top:0;}
-  nav.toc ul{list-style:none; margin:0; padding:0;}
-  nav.toc li a{
-    display:block; padding:.3rem .5rem; border-radius:4px;
-    color:var(--ink); text-decoration:none; font-size:.9rem;
-  }
-  nav.toc li a.sub{padding-left:1.1rem; font-size:.85rem; color:var(--ink-soft);}
-  nav.toc li a:hover{background:var(--panel);}
-  nav.toc li a.active{background:var(--olive); color:#fff;}
-
-  main{padding:1.2rem 1.4rem 4rem; min-width:0;}
-
-  .hero{
-    background:var(--panel); border:1px solid var(--rule); border-radius:10px;
-    padding:1.1rem 1.3rem; margin-bottom:1.6rem; box-shadow:var(--shadow);
-  }
-  .hero h1{margin:.1rem 0 .3rem; font-size:1.5rem; color:var(--olive-dark);}
-  [data-theme="dark"] .hero h1{color:var(--olive-light);}
-  @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .hero h1{color:var(--olive-light);}}
-  .hero p{margin:.25rem 0; color:var(--ink-soft); font-size:.92rem;}
-  .disclaimer{
-    margin-top:.7rem; padding:.6rem .8rem; border-radius:6px;
-    background:var(--code-bg); border-left:3px solid var(--accent);
-    font-size:.82rem; color:var(--ink-soft);
-  }
-
-  section.category{margin-bottom:2.6rem;}
-  section.category > h2{
-    font-size:1.4rem; color:#fff; background:var(--olive);
-    display:inline-block; padding:.35rem .9rem; border-radius:6px 6px 0 0;
-    margin:0; position:relative; top:1px;
-  }
-  .cat-body{
-    background:var(--panel); border:1px solid var(--rule); border-radius:0 8px 8px 8px;
-    padding:1.3rem 1.4rem; box-shadow:var(--shadow);
-  }
-
-  article.rule{
-    margin-bottom:1.8rem; scroll-margin-top:70px;
-  }
-  article.rule:last-child{margin-bottom:0;}
-  article.rule h3{
-    font-size:1.08rem; color:var(--olive-dark); margin:0 0 .5rem;
-    border-bottom:2px solid var(--tan); padding-bottom:.25rem;
-  }
-  [data-theme="dark"] article.rule h3{color:var(--olive-light);}
-  @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) article.rule h3{color:var(--olive-light);}}
-
-  article.rule p{margin:.5rem 0;}
-  article.rule ul, article.rule ol{margin:.4rem 0 .7rem; padding-left:1.35rem;}
-  article.rule li{margin:.28rem 0;}
-  .pageref{
-    font-size:.72rem; color:var(--ink-soft); background:var(--code-bg);
-    border-radius:4px; padding:.1rem .4rem; margin-left:.4rem; white-space:nowrap;
-  }
-
-  .callout{
-    background:var(--code-bg); border-left:3px solid var(--olive);
-    padding:.6rem .8rem; border-radius:6px; margin:.6rem 0; font-size:.9rem;
-  }
-  .callout.warn{border-left-color:var(--accent);}
-  .callout strong{color:var(--olive-dark);}
-  [data-theme="dark"] .callout strong{color:var(--olive-light);}
-  @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .callout strong{color:var(--olive-light);}}
-
-  .xref{
-    display:inline-block; margin:.15rem .3rem .15rem 0; font-size:.85rem;
-    background:var(--bg-alt); border:1px solid var(--rule); border-radius:20px;
-    padding:.15rem .7rem; text-decoration:none;
-  }
-  .xref:before{content:"↳ ";}
-
-  table.ref{
-    width:100%; border-collapse:collapse; margin:.6rem 0 1rem; font-size:.88rem;
-  }
-  table.ref caption{
-    text-align:left; font-size:.78rem; color:var(--ink-soft); margin-bottom:.3rem;
-  }
-  table.ref th, table.ref td{
-    border:1px solid var(--rule); padding:.4rem .55rem; text-align:left;
-  }
-  table.ref th{background:var(--bg-alt); font-weight:700;}
-  table.ref td.num, table.ref th.num{text-align:center; white-space:nowrap;}
-
-  footer{
-    text-align:center; padding:1.6rem 1rem 3rem; color:var(--ink-soft); font-size:.8rem;
-  }
-  footer a{color:var(--ink-soft);}
-
-  mark{background:#ffe08a; color:#26261f; padding:0 .1em; border-radius:2px;}
-  [data-theme="dark"] mark{background:#7a5c00; color:#fff;}
-
-  .hidden-by-search{display:none !important;}
-  .no-results{padding:2rem; text-align:center; color:var(--ink-soft);}
-
-  .mobile-toc-toggle{display:none;}
-  @media (max-width:860px){
-    .mobile-toc-toggle{display:inline-flex;}
-  }
-</style>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <header class="topbar">
   <button class="icon-btn mobile-toc-toggle" id="tocToggle" aria-label="Inhalt umschalten" title="Inhaltsverzeichnis">☰</button>
   <span class="brand">⚔️ Bolt&nbsp;Action <span class="badge">v3</span></span>
+  <nav class="siteNav">
+    <a href="index.html" class="current">📖 Regeln</a>
+    <a href="setup.html">🎲 Gefechts-Generator</a>
+  </nav>
   <input id="search" type="search" placeholder="Regel suchen … (z. B. „Panzerfaust“, „Stockwerk“)" aria-label="Regeln durchsuchen">
   <button class="icon-btn" id="themeToggle" title="Hell/Dunkel umschalten" aria-label="Hell/Dunkel umschalten">🌓</button>
 </header>
@@ -264,12 +45,18 @@
       <li><a href="#nahkampf-haeuser" class="sub" data-sec>… gegen Häuser</a></li>
       <li><a href="#nahkampf-panzerjaeger" class="sub" data-sec>Panzerjäger/-granaten gg. Panzer</a></li>
     </ul>
+    <h2>Flammenwerfer</h2>
+    <ul>
+      <li><a href="#flammenwerfer" class="sub" data-sec>Übersicht</a></li>
+      <li><a href="#flammenwerfer-infanterie" class="sub" data-sec>Flammenwerfer (Infanterie)</a></li>
+      <li><a href="#flammenwerfer-fahrzeuge" class="sub" data-sec>Flammenwerfer (Fahrzeuge)</a></li>
+    </ul>
   </nav>
 
   <main id="main">
     <div class="hero">
       <h1>Bolt Action v3 – persönliche Regelreferenz</h1>
-      <p>Kompakte Zusammenfassung der Regeln, bei denen am Tisch am häufigsten nachgeschlagen wird: Transporter, Häuser, Nahkampf. Zum schnellen Nachschauen per Linkliste – nicht zum Erlernen des kompletten Spiels gedacht.</p>
+      <p>Kompakte Zusammenfassung der Regeln, bei denen am Tisch am häufigsten nachgeschlagen wird: Transporter, Häuser, Nahkampf, Flammenwerfer. Zum schnellen Nachschauen per Linkliste – nicht zum Erlernen des kompletten Spiels gedacht. Für die Gefechtsvorbereitung (Szenario, Karte, Aufstellung) gibt es den <a href="setup.html">🎲 Gefechts-Generator</a>.</p>
       <div class="disclaimer">
         <strong>Hinweis:</strong> Dies ist eine <strong>eigene, frei formulierte Zusammenfassung</strong> der Spielmechanik von <em>Bolt Action</em> (3. Edition, Warlord Games). Es werden keine Original-Texte oder Bilder aus dem Regelbuch wiedergegeben – nur eigene Notizen mit Seitenangaben zum Abgleich mit dem eigenen, offiziell erworbenen Regelbuch. Bolt Action ist ein Warenzeichen von Warlord Games Ltd.
       </div>
@@ -385,6 +172,7 @@
 
         <article class="rule" id="haeuser-flammenwerfer">
           <h3>Flammenwerfer gegen Haus <span class="pageref">S. 157</span></h3>
+          <p>Grundmechanik des Flammenwerfers (Trefferwurf, Pins, Moraltest): <a class="xref" href="#flammenwerfer-infanterie">Flammenwerfer → Infanterie</a> / <a class="xref" href="#flammenwerfer-fahrzeuge">Flammenwerfer → Fahrzeuge</a></p>
           <ul>
             <li>Nur einsetzbar, wenn eine Öffnung (Fenster, Tür, Lücke) zum Ziel sichtbar ist.</li>
             <li>Trifft <strong>ohne Deckungswurf</strong> – auch bei „DOWN“ werden die Treffer nur halbiert (wie bei HE), kein Save.</li>
@@ -470,6 +258,37 @@
             <li>Überlebt das Fahrzeug den Assault, ist aber (vorher oder dadurch) immobilisiert: sofortiger <strong>Moraltest</strong> fürs Fahrzeug – bei Misserfolg gibt die Crew auf, Fahrzeug ist <strong>Knocked Out</strong>.</li>
             <li>Danach macht die angreifende Infanterie ganz normal ihren <strong>Regroup-Move</strong>.</li>
           </ul>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- ================= FLAMMENWERFER ================= -->
+    <section class="category" id="flammenwerfer">
+      <h2>🔥 Flammenwerfer</h2>
+      <div class="cat-body">
+
+        <article class="rule" id="flammenwerfer-infanterie">
+          <h3>Flammenwerfer (Infanterie) <span class="pageref">S. 95, 97</span></h3>
+          <ul>
+            <li>Treffer erlauben <strong>keinerlei Deckungswurf</strong> – wirkt also auch gegen Ziele in Bunkern, hinter Deckung oder im Zustand <strong>DOWN</strong> voll.</li>
+            <li><strong>Trefferwurf:</strong> ganz normal 1 Würfel wie beim Schießen. Bei einem Treffer wird daraus <strong>D6 Treffer</strong> (nicht nur einer!). Da es keine Deckungswürfe gibt, wird direkt für jeden Treffer auf Schaden gewürfelt.</li>
+            <li>Jede getroffene Einheit erhält <strong>1 Pin</strong> für den Treffer selbst, plus zusätzlich <strong>D3 Pins</strong> für den puren Schockeffekt – macht insgesamt <strong>D3+1 Pins</strong>.</li>
+            <li>Die <strong>schießende</strong> Einheit bekommt ebenfalls <strong>1 Pin</strong> – unabhängig davon, ob getroffen oder nicht (Eigengefährdung/Unübersichtlichkeit).</li>
+            <li>Die getroffene Einheit muss danach <strong>immer einen Moraltest</strong> machen – auch ganz ohne Verluste/Schaden. Bei Misserfolg ist die Einheit <strong>sofort komplett vernichtet</strong> (Moral schlicht zusammengebrochen).</li>
+            <li>Nach jedem Schuss: <strong>1×D6</strong> würfeln. Bei einer <strong>1 oder 2</strong> ist der Tank leer, der Flammenwerfer für den Rest des Spiels nutzlos (Modell wird zum unbewaffneten Modell bzw. entfernt, falls kein Ersatzmodell vorhanden – dafür gibt es keinen Moraltest).</li>
+          </ul>
+          <div class="callout">Gegen <strong>Häuser</strong>: <a class="xref" href="#haeuser-flammenwerfer">Häuser → Flammenwerfer gegen Haus</a> (nur mit sichtbarer Öffnung, Brandgefahr auch bei Fehlschuss).</div>
+        </article>
+
+        <article class="rule" id="flammenwerfer-fahrzeuge">
+          <h3>Flammenwerfer (Fahrzeuge/Autos) <span class="pageref">S. 97</span></h3>
+          <ul>
+            <li>Gleiche Grundmechanik wie beim Infanterie-Flammenwerfer (kein Save, Pflicht-Moraltest, Pin für Ziel <strong>und</strong> Schütze) – aber ein Treffer wird zu <strong>D6+1 Treffern</strong> statt nur D6.</li>
+            <li>Trifft ein Fahrzeug-Flammenwerfer ein anderes Fahrzeug: es wird <strong>immer die Oberseite/Top-Panzerung</strong> getroffen, egal aus welcher Position geschossen wurde. Da die Wirkung nicht auf kinetischer Energie beruht, entfällt sowohl der <strong>-1 Fernschuss-Malus</strong> als auch der <strong>+1 Nahbereichs-Bonus</strong> auf den Pen-Wert.</li>
+            <li>Nach dem Schuss: pro verbautem Flammenwerfer <strong>1×D6</strong> würfeln (bei mehreren Flammenwerfern also mehrfach). Bei <strong>1 oder 2</strong> ist genau dieser Flammenwerfer leer – hat aber sonst <strong>keine</strong> weitere Auswirkung auf das Fahrzeug.</li>
+          </ul>
+          <div class="callout warn"><strong>Erhöhtes Explosionsrisiko:</strong> Muss für ein Fahrzeug, das <strong>selbst mit Flammenwerfer(n) ausgerüstet ist</strong>, auf einer der Schadenstabellen für gepanzerte Fahrzeuge gewürfelt werden (egal durch welche Waffe der Schaden verursacht wurde!), gibt es <strong>+1 auf das Würfelergebnis</strong> – der mitgeführte Brennstoff macht das Fahrzeug insgesamt empfindlicher.</div>
         </article>
 
       </div>
