@@ -154,8 +154,8 @@
 
   /* ---------------- Battle Scenario data ---------------- */
   var DEPLOY_ZONES = [
-    {min:1, max:3, name:'Long Edges (lange Kanten)', desc:'Der Tisch wird in zwei Hälften geteilt, jeder sitzt an einer langen Kante.', svg:'edges'},
-    {min:4, max:6, name:'Quarters (Viertel)', desc:'Der Tisch wird geviertelt, jeder verteidigt ein Viertel.', svg:'quarters'}
+    {min:1, max:3, name:'Long Edges (lange Kanten)', desc:'Jeder sitzt an einer langen Kante. Die eigene Aufstellungszone reicht 12" von der eigenen Kante in den Tisch hinein; der Rest bis zur Tischmitte bleibt neutral – dort darf zu Beginn niemand aufgestellt werden.', svg:'edges'},
+    {min:4, max:6, name:'Quarters (Viertel)', desc:'Der Tisch wird geviertelt. Jeder bekommt genau ein Viertel als Aufstellungszone, das dem des Gegners diagonal gegenüberliegt – die beiden übrigen Viertel bleiben ungenutzt. Ein Kreis mit 12" Radius um die Tischmitte bleibt zusätzlich in jedem Viertel neutral.', svg:'quarters'}
   ];
   var DEPLOY_TYPES = [
     {min:1, max:3, key:'meeting', name:'Meeting Engagement',
@@ -268,32 +268,49 @@
     return FACTIONS.filter(function(x){ return x.id === sel.value; })[0].name;
   }
 
-  /* ---------------- SVG deployment diagrams (labelled with real faction names) ---------------- */
-  function svgEdges(nameWinner, nameOther, winnerIsLeft){
-    var leftName = winnerIsLeft ? nameWinner : nameOther;
-    var rightName = winnerIsLeft ? nameOther : nameWinner;
-    var leftFill = winnerIsLeft ? 'var(--olive)' : 'var(--tan)';
-    var rightFill = winnerIsLeft ? 'var(--tan)' : 'var(--olive)';
-    return '<svg width="220" height="150" viewBox="0 0 220 150">'+
-      '<rect x="1" y="1" width="109" height="148" fill="'+leftFill+'" stroke="var(--rule)"/>'+
-      '<rect x="110" y="1" width="109" height="148" fill="'+rightFill+'" stroke="var(--rule)"/>'+
-      '<text x="55" y="78" text-anchor="middle" fill="#fff" font-size="11">'+truncate(leftName,14)+'</text>'+
-      '<text x="165" y="78" text-anchor="middle" fill="#3a3b2c" font-size="11">'+truncate(rightName,14)+'</text>'+
+  /* ---------------- SVG deployment diagrams (mirror the rulebook maps on p.169) ----------------
+     Table is drawn landscape (long/6' edges = top & bottom, short/4' edges = left & right),
+     since players deploy behind a LONG edge. Deployment zones are only 12" deep from the
+     player's own edge, with a neutral no-man's-land in between down to the table middle line. */
+  function svgEdges(nameWinner, nameOther, winnerOnTop){
+    var W = 240, H = 168, zoneH = 42; // zone depth ≈ 12" of the table's 48" (4') width
+    var topName = winnerOnTop ? nameWinner : nameOther;
+    var botName = winnerOnTop ? nameOther : nameWinner;
+    var topFill = winnerOnTop ? 'var(--olive)' : 'var(--tan)';
+    var botFill = winnerOnTop ? 'var(--tan)' : 'var(--olive)';
+    var topTextFill = winnerOnTop ? '#fff' : '#3a3b2c';
+    var botTextFill = winnerOnTop ? '#3a3b2c' : '#fff';
+    return '<svg width="240" height="168" viewBox="0 0 '+W+' '+H+'">'+
+      '<rect x="1" y="1" width="'+(W-2)+'" height="'+(H-2)+'" fill="var(--bg-alt)" stroke="var(--rule)"/>'+
+      '<rect x="1" y="1" width="'+(W-2)+'" height="'+zoneH+'" fill="'+topFill+'"/>'+
+      '<rect x="1" y="'+(H-1-zoneH)+'" width="'+(W-2)+'" height="'+zoneH+'" fill="'+botFill+'"/>'+
+      '<rect x="1" y="1" width="'+(W-2)+'" height="'+(H-2)+'" fill="none" stroke="var(--rule)"/>'+
+      '<line x1="1" y1="'+(H/2)+'" x2="'+(W-1)+'" y2="'+(H/2)+'" stroke="var(--ink-soft)" stroke-width="1" stroke-dasharray="4 3"/>'+
+      '<text x="'+(W/2)+'" y="'+(zoneH/2+4)+'" text-anchor="middle" fill="'+topTextFill+'" font-size="12" font-weight="600">'+truncate(topName,20)+'</text>'+
+      '<text x="'+(W/2)+'" y="'+(H-zoneH/2+4)+'" text-anchor="middle" fill="'+botTextFill+'" font-size="12" font-weight="600">'+truncate(botName,20)+'</text>'+
+      '<text x="8" y="'+(H/2-6)+'" fill="var(--ink-soft)" font-size="9">Tischmitte</text>'+
+      '<text x="'+(W/2)+'" y="'+(H/2+16)+'" text-anchor="middle" fill="var(--ink-soft)" font-size="9">neutral (kein Aufstellungsgebiet)</text>'+
       '</svg>';
   }
   function svgQuarters(nameWinner, nameOther){
+    var W = 240, H = 168, cx = W/2, cy = H/2, r = 26; // r ≈ 12" no-deploy circle around table centre
     var corners = ['tl','tr','bl','br'];
     var winnerQ = pick(corners);
     var opp = {tl:'br',tr:'bl',bl:'tr',br:'tl'}[winnerQ];
-    var boxes = {tl:[1,1],tr:[110,1],bl:[1,75],br:[110,75]};
-    var html = '<svg width="220" height="150" viewBox="0 0 220 150">';
+    var qw = (W-2)/2, qh = (H-2)/2;
+    var boxes = {tl:[1,1], tr:[1+qw,1], bl:[1,1+qh], br:[1+qw,1+qh]};
+    var labelPos = {tl:[1+qw*0.5,1+qh*0.35], tr:[1+qw*1.5,1+qh*0.35], bl:[1+qw*0.5,1+qh*1.65], br:[1+qw*1.5,1+qh*1.65]};
+    var html = '<svg width="240" height="168" viewBox="0 0 '+W+' '+H+'">';
     Object.keys(boxes).forEach(function(k){
       var fill = k===winnerQ ? 'var(--olive)' : (k===opp ? 'var(--tan)' : 'var(--bg-alt)');
-      html += '<rect x="'+boxes[k][0]+'" y="'+boxes[k][1]+'" width="109" height="74" fill="'+fill+'" stroke="var(--rule)"/>';
+      html += '<rect x="'+boxes[k][0]+'" y="'+boxes[k][1]+'" width="'+qw+'" height="'+qh+'" fill="'+fill+'" stroke="var(--rule)"/>';
     });
-    var cx = {tl:55,tr:165,bl:55,br:165}, cy = {tl:38,tr:38,bl:112,br:112};
-    html += '<text x="'+cx[winnerQ]+'" y="'+cy[winnerQ]+'" text-anchor="middle" fill="#fff" font-size="11">'+truncate(nameWinner,12)+'</text>';
-    html += '<text x="'+cx[opp]+'" y="'+cy[opp]+'" text-anchor="middle" fill="#3a3b2c" font-size="11">'+truncate(nameOther,12)+'</text>';
+    html += '<line x1="'+cx+'" y1="1" x2="'+cx+'" y2="'+(H-1)+'" stroke="var(--ink-soft)" stroke-width="1" stroke-dasharray="4 3"/>';
+    html += '<line x1="1" y1="'+cy+'" x2="'+(W-1)+'" y2="'+cy+'" stroke="var(--ink-soft)" stroke-width="1" stroke-dasharray="4 3"/>';
+    html += '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="var(--bg-alt)" stroke="var(--ink-soft)" stroke-width="1"/>';
+    html += '<text x="'+cx+'" y="'+(cy+3)+'" text-anchor="middle" fill="var(--ink-soft)" font-size="8">12" frei</text>';
+    html += '<text x="'+labelPos[winnerQ][0]+'" y="'+labelPos[winnerQ][1]+'" text-anchor="middle" fill="#fff" font-size="11" font-weight="600">'+truncate(nameWinner,14)+'</text>';
+    html += '<text x="'+labelPos[opp][0]+'" y="'+labelPos[opp][1]+'" text-anchor="middle" fill="#3a3b2c" font-size="11" font-weight="600">'+truncate(nameOther,14)+'</text>';
     html += '</svg>';
     return html;
   }
